@@ -1,10 +1,6 @@
 #ifndef __HIGH_COMMAND_H
 #define __HIGH_COMMAND_H
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdint.h>
-
 typedef struct {
     const char short_name; // not a typo
     const char *long_name;

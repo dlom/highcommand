@@ -39,6 +39,8 @@
 #ifndef __TESTHELP_H
 #define __TESTHELP_H
 
+#include <stdlib.h>
+
 int __failed_tests = 0;
 int __test_num = 0;
 #define test_cond(descr,_c) do { \
@@ -50,7 +52,7 @@ int __test_num = 0;
                     __test_num-__failed_tests, __failed_tests); \
     if (__failed_tests) { \
         printf("=== WARNING === We have failed tests here...\n"); \
-        exit(1); \
+        exit(EXIT_FAILURE); \
     } \
 } while(0);
 
