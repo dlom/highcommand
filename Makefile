@@ -1,4 +1,4 @@
-CC = clang
+CC = gcc
 FLAGS = -g -Wall -DHIGH_COMMAND_TEST
 V_FLAGS = --leak-check=full --track-origins=yes
 
