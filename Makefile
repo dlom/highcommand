@@ -1,7 +1,8 @@
-CC = gcc
+CC = clang
 FLAGS = -g -Wall -DHIGH_COMMAND_TEST
+V_FLAGS = --leak-check=full --track-origins=yes
 
-.PHONY: all clean
+.PHONY: all clean valgrind
 
 all: highcommand-test
 
@@ -10,3 +11,6 @@ highcommand-test: highcommand.c highcommand.h testhelp.h
 
 clean:
 	rm -f highcommand-test
+
+valgrind: highcommand-test
+	valgrind $(V_FLAGS) ./highcommand-test
