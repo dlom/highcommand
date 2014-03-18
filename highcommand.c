@@ -24,6 +24,12 @@ int hc_opt_by_ref(hc_meta *meta, char *short_name, char *long_name, char *help_t
 int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
     struct option *long_options = _hc_get_long_options_by_ref(meta);
     char *short_options = _hc_get_short_options_by_ref(meta);
+    int opt = 0, old_opterr = opterr;
+    opterr = 0;
+    while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
+        printf("%c: %s\n", opt, optarg);
+    }
+    opterr = old_opterr;
     free(long_options);
     free(short_options);
     _hc_free_by_ref(meta);
@@ -106,11 +112,11 @@ char *_hc_get_short_options_by_ref(hc_meta *meta) {
 int _hc_extract_argument(char *name) {
     size_t length = strlen(name);
     if (length > 1 && name[length - 1] == '=') {
-        return 1;
+        return 1; // required_argument
     } else if (length > 2 && name[length - 2] == '=' && name[length - 1] == '?') {
-        return 2;
+        return 2; // optional_argument
     } else {
-        return 0;
+        return 0; // no_argument
     }
 }
 
@@ -152,8 +158,22 @@ int main(int argc, char *argv[]) {
 
     test_subject("generating data for getopt_long");
     char *short_options = _hc_get_short_options_by_ref(&meta);
+    struct option *long_options = _hc_get_long_options_by_ref(&meta);
     test_cond("short optstring is valid", strcmp(short_options, "n:a:b::c:de:f:") == 0);
+    test_cond("first option has valid name", strcmp(long_options[0].name, "name") == 0);
+    test_cond("first option has required argument", long_options[0].has_arg == required_argument);
+    test_cond("first option has no flag", long_options[0].flag == NULL);
+    test_cond("first option has valid val", long_options[0].val == 'n');
+    test_cond("third option has valid name", strcmp(long_options[2].name, "boom") == 0);
+    test_cond("third option has optional argument", long_options[2].has_arg == optional_argument);
+    test_cond("third option has no flag", long_options[2].flag == NULL);
+    test_cond("third option has valid val", long_options[2].val == 'b');
+    test_cond("fifth option has valid name", strcmp(long_options[4].name, "different") == 0);
+    test_cond("fifth option has no argument", long_options[4].has_arg == no_argument);
+    test_cond("fifth option has no flag", long_options[4].flag == NULL);
+    test_cond("fifth option has valid val", long_options[4].val == 'd');
     free(short_options);
+    free(long_options);
 
     test_subject("run and free meta");
     hc_run_by_ref(&meta, argc, argv);

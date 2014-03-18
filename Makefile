@@ -1,5 +1,5 @@
 CC = gcc
-FLAGS = -g -Wall -DHIGH_COMMAND_TEST
+FLAGS = -Wall -std=gnu99 -pedantic -DHIGH_COMMAND_TEST -g
 V_FLAGS = --leak-check=full --track-origins=yes
 
 .PHONY: all clean valgrind test
