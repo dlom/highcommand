@@ -6,6 +6,7 @@
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
+#include <stdio.h>
 
 #define HC_MAX_OPTS_CAPACITY (1024)
 #define HC_INITIAL_OPTS_CAPACITY (8)
@@ -32,11 +33,15 @@ typedef struct {
 int hc_opt_by_ref(hc_meta *meta, char *short_name, char *long_name, char *help_text);
 int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]);
 
-// privatez
+// private stuffs
 
 int _hc_free_by_ref(hc_meta *meta);
-int _hc_resize_opts_array(hc_meta *meta);
+int _hc_resize_opts_array_by_ref(hc_meta *meta);
+char *_hc_get_short_options_by_ref(hc_meta *meta);
+struct option *_hc_get_long_options_by_ref(hc_meta *meta);
+
+// private utils
+
 int _hc_extract_argument(char *name);
-struct option *_hc_create_getopt_long_array_by_ref(hc_meta *meta);
 
 #endif

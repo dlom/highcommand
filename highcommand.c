@@ -1,8 +1,9 @@
 #include "highcommand.h"
-#include <stdio.h>
+
+// by ref
 
 int hc_opt_by_ref(hc_meta *meta, char *short_name, char *long_name, char *help_text) {
-    int err = _hc_resize_opts_array(meta);
+    int err = _hc_resize_opts_array_by_ref(meta);
     if (err != 0) return err;
 
     int short_length = strlen(short_name);
@@ -21,11 +22,15 @@ int hc_opt_by_ref(hc_meta *meta, char *short_name, char *long_name, char *help_t
 }
 
 int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
-    struct option *wow = _hc_create_getopt_long_array_by_ref(meta);
-    free(wow);
+    struct option *long_options = _hc_get_long_options_by_ref(meta);
+    char *short_options = _hc_get_short_options_by_ref(meta);
+    free(long_options);
+    free(short_options);
     _hc_free_by_ref(meta);
     return 0;
 }
+
+// private stuffs
 
 int _hc_free_by_ref(hc_meta *meta) {
     if (meta->options == NULL) return 0;
@@ -42,7 +47,7 @@ int _hc_free_by_ref(hc_meta *meta) {
     return 0;
 }
 
-int _hc_resize_opts_array(hc_meta *meta) {
+int _hc_resize_opts_array_by_ref(hc_meta *meta) {
     if (meta->options == NULL) {
         meta->capacity = HC_INITIAL_OPTS_CAPACITY;
         meta->options = malloc(meta->capacity * sizeof(hc_option));
@@ -63,19 +68,7 @@ int _hc_resize_opts_array(hc_meta *meta) {
     return 0;
 }
 
-// can do both short and long
-int _hc_extract_argument(char *name) {
-    size_t length = strlen(name);
-    if (length > 1 && name[length - 1] == '=') {
-        return 1;
-    } else if (length > 2 && name[length - 2] == '=' && name[length - 1] == '?') {
-        return 2;
-    } else {
-        return 0;
-    }
-}
-
-struct option *_hc_create_getopt_long_array_by_ref(hc_meta *meta) {
+struct option *_hc_get_long_options_by_ref(hc_meta *meta) {
     struct option terminator = {NULL, 0, NULL, 0};
     struct option *long_options = malloc((meta->next_index + 1) * sizeof(struct option));
     if (long_options == NULL) return NULL;
@@ -88,8 +81,40 @@ struct option *_hc_create_getopt_long_array_by_ref(hc_meta *meta) {
     return long_options;
 }
 
+char *_hc_get_short_options_by_ref(hc_meta *meta) {
+    char *short_options = malloc(((meta->next_index * 3) + 1) * sizeof(char)); // make sure we have enough room
+    if (short_options == NULL) return NULL;
+    int i, length = 0;
+    for (i = 0; i < meta->next_index; i++) {
+        char *colons = "::";
+        int colon_length = (2 - meta->options[i].has_argument);
+        if (colon_length > 2 || colon_length < 0) colon_length = 2;
+        length += sprintf(short_options + length, "%c%s", meta->options[i].short_name[0], colons + colon_length);
+    }
+    char *buffer = realloc(short_options, (length + 1) * sizeof(char));
+    if (buffer == NULL) {
+        free(short_options);
+        return NULL;
+    }
+    short_options = buffer;
+    short_options[length] = '\0';
+    return short_options;
+}
+
+// private utils
+
+int _hc_extract_argument(char *name) {
+    size_t length = strlen(name);
+    if (length > 1 && name[length - 1] == '=') {
+        return 1;
+    } else if (length > 2 && name[length - 2] == '=' && name[length - 1] == '?') {
+        return 2;
+    } else {
+        return 0;
+    }
+}
+
 #ifdef HIGH_COMMAND_TEST
-#include <stdio.h>
 #include "testhelp.h"
 
 int main(int argc, char *argv[]) {
@@ -110,20 +135,25 @@ int main(int argc, char *argv[]) {
     test_cond("first option has non-optional argument", meta.options[0].has_argument == 1);
 
     test_subject("enough options for meta resize");
-    hc_opt_by_ref(&meta, "n=", "name=", "the name bro");
-    hc_opt_by_ref(&meta, "w=?", "wow=?", "wow are you serious");
-    hc_opt_by_ref(&meta, "n=", "name=", "the name bro");
+    hc_opt_by_ref(&meta, "a=", "amazing=", "it's amazing");
+    hc_opt_by_ref(&meta, "b=?", "boom=?", "boom you're dead");
+    hc_opt_by_ref(&meta, "c=", "crazy=", "that's crazy");
     hc_opt_by_ref(&meta, "d", "different", "wow different");
-    hc_opt_by_ref(&meta, "n=", "name=", "the name bro");
-    hc_opt_by_ref(&meta, "n=", "name=", "the name bro");
+    hc_opt_by_ref(&meta, "e=", "epic=", "that was epic dude");
+    hc_opt_by_ref(&meta, "f=", "fail=", "failure to succeed");
     test_cond("meta has 16 capacity", meta.capacity == 16);
     test_cond("meta has 7 as next index", meta.capacity == 16);
-    test_cond("option 3 is still different", strcmp(meta.options[2].short_name, "w") == 0);
-    test_cond("option 3 was altered", strcmp(meta.options[2].long_name, "wow") == 0);
+    test_cond("option 3 is still different", strcmp(meta.options[2].short_name, "b") == 0);
+    test_cond("option 3 was altered", strcmp(meta.options[2].long_name, "boom") == 0);
     test_cond("option 3 has optional argument", meta.options[2].has_argument == 2);
     test_cond("option 5 is still different", strcmp(meta.options[4].short_name, "d") == 0);
     test_cond("option 5 wasn't altered", strcmp(meta.options[4].long_name, "different") == 0);
     test_cond("option 5 has no argument", meta.options[4].has_argument == 0);
+
+    test_subject("generating data for getopt_long");
+    char *short_options = _hc_get_short_options_by_ref(&meta);
+    test_cond("short optstring is valid", strcmp(short_options, "n:a:b::c:de:f:") == 0);
+    free(short_options);
 
     test_subject("run and free meta");
     hc_run_by_ref(&meta, argc, argv);
