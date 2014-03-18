@@ -11,7 +11,7 @@
 #define HC_RESIZE_ON (80) /* percent */
 #define HC_META_NEW {NULL, 0, 0}
 
-#define HC_META_NEARING_CAPACITY(meta) ((float) meta->capacity * (HC_RESIZE_ON / 100.0) < (meta->current_index + 1))
+#define HC_META_NEARING_CAPACITY(meta) ((meta->next_index + 1) > (float) meta->capacity * (HC_RESIZE_ON / 100.0))
 
 typedef struct {
     char *short_name;
@@ -21,16 +21,16 @@ typedef struct {
 
 typedef struct {
     hc_option *options;
-    int current_index;
+    int next_index;
     int capacity;
 } hc_meta;
 
 int hc_opt_by_ref(hc_meta *meta, char *short_name, char *long_name, char *help_text);
 int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]);
-int hc_free_by_ref(hc_meta *meta);
 
 // privatez
 
+int _hc_free_by_ref(hc_meta *meta);
 int _hc_resize_opts_array(hc_meta *meta);
 
 #endif
