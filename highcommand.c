@@ -3,7 +3,11 @@
 int hc_opt_by_ref(hc_meta *meta, char *short_name, char *long_name, char *help_text) {
     int err = _hc_resize_opts_array(meta);
     if (err != 0) return err;
-    char *s = strdup(short_name);
+    int short_length = strlen(short_name);
+    int long_length = strlen(long_name);
+    int short_arg = _hc_extract_argument(short_name);
+    int long_arg = _hc_extract_argument(long_name);
+    char *s = strndup(short_name, 1);
     char *l = strdup(long_name);
     char *h = strdup(help_text);
     hc_option new_opt = {s, l, h};
@@ -18,6 +22,7 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
 }
 
 int _hc_free_by_ref(hc_meta *meta) {
+    if (meta->options == NULL) return 0;
     int i;
     for (i = 0; i < meta->next_index; i++) {
         free(meta->options[i].short_name);
@@ -50,6 +55,28 @@ int _hc_resize_opts_array(hc_meta *meta) {
         }
     }
     return 0;
+}
+
+// can do both short and long
+int _hc_extract_argument(char *name) {
+    size_t length = strlen(name);
+    if (length > 1 && name[length - 1] == '=') {
+        return 1;
+    } else if (length > 2 && name[length - 2] == '=' && name[length - 1] == '?') {
+        return 2;
+    } else {
+        return 0;
+    }
+}
+
+struct option *_hc_create_getopt_long_array_by_ref(hc_meta *meta) {
+    struct option *long_options = malloc(meta->next_index * sizeof(struct option));
+    if (long_options == NULL) return NULL;
+    int i;
+    for (i = 0; i < meta->next_index; i++) {
+        // um
+    }
+    return long_options;
 }
 
 #ifdef HIGH_COMMAND_TEST
