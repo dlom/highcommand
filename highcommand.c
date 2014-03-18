@@ -1,21 +1,17 @@
 #include "highcommand.h"
 
 int hc_opt_by_ref(hc_meta *meta, char *short_name, char *long_name, char *help_text) {
-    // create option
-    //   string stuffs
     char *s = strdup(short_name);
     char *l = strdup(long_name);
     char *h = strdup(help_text);
-    //   crazy string shit happens here
     hc_option new_opt = {s, l, h};
-    // check for size of opt array
-    if (meta->options == NULL) { // create
+    if (meta->options == NULL) {
         meta->capacity = HC_INITIAL_OPTS_CAPACITY;
         meta->options = malloc(meta->capacity * sizeof(hc_option));
         if (meta->options == NULL) {
             return errno;
         }
-    } else if ((float) meta->capacity * (HC_RESIZE_FACTOR / 100.0) < (meta->current_index + 1)) { // resize
+    } else if (NEARING_CAPACITY(meta)) {
         meta->capacity *= 2;
         hc_option *buffer = realloc(meta->options, meta->capacity);
         if (buffer != NULL) {

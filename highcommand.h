@@ -8,8 +8,10 @@
 
 #define HC_MAX_OPTS_CAPACITY (1024)
 #define HC_INITIAL_OPTS_CAPACITY (8)
-#define HC_RESIZE_FACTOR (80) /* percent */
+#define HC_RESIZE_ON (80) /* percent */
 #define HC_META_NEW {NULL, 0, 0}
+
+#define NEARING_CAPACITY(meta) ((float) meta->capacity * (HC_RESIZE_ON / 100.0) < (meta->current_index + 1))
 
 typedef struct {
     char *short_name;
