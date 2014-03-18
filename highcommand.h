@@ -3,29 +3,28 @@
 
 #include <stdlib.h>
 #include <stddef.h>
+#include <string.h>
+#include <errno.h>
 
-#define HC_MAX_OPTS_SIZE (1024);
-#define HC_INITIAL_OPTS_SIZE (8);
+#define HC_MAX_OPTS_CAPACITY (1024)
+#define HC_INITIAL_OPTS_CAPACITY (8)
+#define HC_RESIZE_FACTOR (80) /* percent */
+#define HC_META_NEW {NULL, 0, 0}
 
 typedef struct {
-    const char *short_name;
-    const char *long_name;
-    const char *help_string;
-    const char *scope;
+    char *short_name;
+    char *long_name;
+    char *help_text;
 } hc_option;
 
-typedef void (*hc_command_callback)(int argc, char *argv[]);
+typedef struct {
+    hc_option *options;
+    int current_index;
+    int capacity;
+} hc_meta;
 
-struct {
-    const hc_option *options;
-    int index;
-    int size;
-    const char *current_scope;
-} hc_meta = {NULL, 0, 0, ""};
-
-int hc_opt(char *short_name, char *long_name, char *help_text);
-int hc_cmd(char *name, hc_command_callback callback);
-int hc_run(int argc, char *argv[]/*, hashmap *opts*/);
-int hc_free(char *scope);
+int hc_opt_by_ref(hc_meta *meta, char *short_name, char *long_name, char *help_text);
+int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]/*, hashmap *opts*/);
+int hc_free_by_ref(hc_meta *meta);
 
 #endif
