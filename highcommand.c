@@ -15,6 +15,10 @@ int hc_opt_by_ref(hc_meta *meta, char *short_name, char *long_name, char *help_t
     char *s = strndup(short_name, short_length - has_arg);
     char *l = strndup(long_name, long_length - has_arg);
     char *h = strdup(help_text);
+    if (s == NULL || l == NULL || h == NULL) {
+        free(s); free(l); free(h);
+        return errno;
+    }
 
     hc_option new_opt = {s, l, h, has_arg};
     meta->options[meta->next_index++] = new_opt;
@@ -25,15 +29,15 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
     char *short_options = _hc_get_short_options_by_ref(meta);
     struct option *long_options = _hc_get_long_options_by_ref(meta);
     if (long_options == NULL || short_options == NULL) {
-        free(short_options);
-        free(long_options);
+        free(short_options); free(long_options);
         return errno;
     }
 
     int opt = 0;
     while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
-        printf("%c: %s (%d)\n", opt, optarg, optind);
+        printf("%c: %s (%s)\n", opt, optarg, argv[optind]);
     }
+
     free(long_options);
     free(short_options);
     _hc_free_by_ref(meta);
