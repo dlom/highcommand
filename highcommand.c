@@ -6,8 +6,8 @@ int hc_opt_by_ref(hc_meta *meta, char *short_name, char *long_name, char *help_t
     int err = _hc_resize_opts_array_by_ref(meta);
     if (err != 0) return err;
 
-    int short_length = strlen(short_name);
-    int long_length = strlen(long_name);
+    size_t short_length = strlen(short_name);
+    size_t long_length = strlen(long_name);
 
     int has_arg = _hc_extract_argument(short_name);
     if  (has_arg != _hc_extract_argument(long_name)) return -1;
@@ -96,8 +96,8 @@ char *_hc_get_short_options_by_ref(hc_meta *meta) {
     if (short_options == NULL) return NULL;
     int i, length = 1;
     short_options[0] = ':';
+    char *colons = "::";
     for (i = 0; i < meta->next_index; i++) {
-        char *colons = "::";
         int colon_length = (2 - meta->options[i].has_argument);
         if (colon_length > 2 || colon_length < 0) colon_length = 2;
         length += sprintf(short_options + length, "%c%s", meta->options[i].short_name[0], colons + colon_length);
