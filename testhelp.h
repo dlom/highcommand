@@ -39,6 +39,8 @@
 #ifndef __TESTHELP_H
 #define __TESTHELP_H
 
+#ifndef QUIET_TESTS
+
 #include <stdlib.h>
 
 int __failed_tests = 0;
@@ -58,5 +60,13 @@ int __test_num = 0;
         exit(EXIT_FAILURE); \
     } \
 } while(0);
+
+#else
+
+#define test_subject(subj)
+#define test_cond(descr,_c)
+#define test_report()
+
+#endif
 
 #endif
