@@ -35,10 +35,11 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
 
     int opt;
     hc_option hc_opt;
-    while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
-        hc_opt = _hc_get_option_by_ref(meta, opt);
-        if (hc_opt.has_argument == 2 && optarg == NULL && argv[optind] != NULL && argv[optind][0] != '-') {
+    while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != EOF) {
+        hc_opt = _hc_get_option_by_ref(meta, (opt != ':' ? opt : optopt));
+        if (hc_opt.has_argument == 2 && optarg == NULL && HC_ARG_ISNT_OPTION(argv[optind])) {
             optarg = argv[optind];
+            if (strcmp(optarg, "--") == 0) optind++;
         }
         printf("%s: %s\n", hc_opt.long_name, optarg);
     }
@@ -101,9 +102,10 @@ struct option *_hc_get_long_options_by_ref(hc_meta *meta) {
 }
 
 char *_hc_get_short_options_by_ref(hc_meta *meta) {
-    char *short_options = malloc(((meta->next_index * 3) + 1) * sizeof(char)); // make sure we have enough room
+    char *short_options = malloc(((meta->next_index * 3) + 2) * sizeof(char)); // make sure we have enough room
     if (short_options == NULL) return NULL;
-    int i, length = 0;
+    short_options[0] = ':';
+    int i, length = 1;
     char *colons = "::";
     for (i = 0; i < meta->next_index; i++) {
         int colon_length = (2 - meta->options[i].has_argument);
@@ -135,11 +137,11 @@ hc_option _hc_get_option_by_ref(hc_meta *meta, char short_name) {
 int _hc_extract_argument(char *name) {
     size_t length = strlen(name);
     if (length > 1 && name[length - 1] == '=') {
-        return 1; // required_argument
+        return required_argument; // 1
     } else if (length > 2 && name[length - 2] == '=' && name[length - 1] == '?') {
-        return 2; // optional_argument
+        return optional_argument; // 2
     } else {
-        return 0; // no_argument
+        return no_argument; // 0
     }
 }
 
@@ -182,7 +184,7 @@ int main(int argc, char *argv[]) {
     test_subject("generating data for getopt_long");
     char *short_options = _hc_get_short_options_by_ref(&meta);
     struct option *long_options = _hc_get_long_options_by_ref(&meta);
-    test_cond("short optstring is valid", strcmp(short_options, "n:a:b::c:de:f:") == 0);
+    test_cond("short optstring is valid", strcmp(short_options, ":n:a:b::c:de:f:") == 0);
     test_cond("first option has valid name", strcmp(long_options[0].name, "name") == 0);
     test_cond("first option has required argument", long_options[0].has_arg == required_argument);
     test_cond("first option has no flag", long_options[0].flag == NULL);

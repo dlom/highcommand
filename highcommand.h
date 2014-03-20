@@ -14,6 +14,7 @@
 #define HC_META_NEW {NULL, 0, 0}
 
 #define HC_META_NEARING_CAPACITY(meta) ((meta->next_index + 1) > (float) meta->capacity * (HC_RESIZE_ON / 100.0))
+#define HC_ARG_ISNT_OPTION(arg) (arg != NULL && (strcmp(arg, "-") == 0 || strcmp(arg, "--") == 0 || arg[0] != '-'))
 
 typedef struct {
     char *short_name;
@@ -21,6 +22,13 @@ typedef struct {
     char *help_text;
     int has_argument;
 } hc_option;
+
+// typedef struct {
+//     enum {INT, STRING} type;
+//     union {
+
+//     }
+// }
 
 typedef struct {
     hc_option *options;
