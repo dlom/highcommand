@@ -33,9 +33,14 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
         return errno;
     }
 
-    int opt = 0;
+    int opt;
+    hc_option hc_opt;
     while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
-        printf("%c: %s (%s)\n", opt, optarg, argv[optind]);
+        hc_opt = _hc_get_option_by_ref(meta, opt);
+        if (hc_opt.has_argument == 2 && optarg == NULL && argv[optind][0] != '-') {
+            optarg = argv[optind];
+        }
+        printf("%c: %s\n", opt, optarg);
     }
 
     free(long_options);
@@ -96,10 +101,9 @@ struct option *_hc_get_long_options_by_ref(hc_meta *meta) {
 }
 
 char *_hc_get_short_options_by_ref(hc_meta *meta) {
-    char *short_options = malloc(((meta->next_index * 3) + 2) * sizeof(char)); // make sure we have enough room
+    char *short_options = malloc(((meta->next_index * 3) + 1) * sizeof(char)); // make sure we have enough room
     if (short_options == NULL) return NULL;
-    int i, length = 1;
-    short_options[0] = ':';
+    int i, length = 0;
     char *colons = "::";
     for (i = 0; i < meta->next_index; i++) {
         int colon_length = (2 - meta->options[i].has_argument);
@@ -114,6 +118,16 @@ char *_hc_get_short_options_by_ref(hc_meta *meta) {
     short_options = buffer;
     short_options[length] = '\0';
     return short_options;
+}
+
+hc_option _hc_get_option_by_ref(hc_meta *meta, char short_name) {
+    int i;
+    for (i = 0; i < meta->next_index; i++) {
+        if (meta->options[i].short_name[0] == short_name) {
+            return meta->options[i];
+        }
+    }
+    return (hc_option) {"?", "?", "", 0};
 }
 
 // private utils
@@ -168,7 +182,7 @@ int main(int argc, char *argv[]) {
     test_subject("generating data for getopt_long");
     char *short_options = _hc_get_short_options_by_ref(&meta);
     struct option *long_options = _hc_get_long_options_by_ref(&meta);
-    test_cond("short optstring is valid", strcmp(short_options, ":n:a:b::c:de:f:") == 0);
+    test_cond("short optstring is valid", strcmp(short_options, "n:a:b::c:de:f:") == 0);
     test_cond("first option has valid name", strcmp(long_options[0].name, "name") == 0);
     test_cond("first option has required argument", long_options[0].has_arg == required_argument);
     test_cond("first option has no flag", long_options[0].flag == NULL);

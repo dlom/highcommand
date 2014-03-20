@@ -39,6 +39,7 @@ int _hc_free_by_ref(hc_meta *meta);
 int _hc_resize_opts_array_by_ref(hc_meta *meta);
 char *_hc_get_short_options_by_ref(hc_meta *meta);
 struct option *_hc_get_long_options_by_ref(hc_meta *meta);
+hc_option _hc_get_option_by_ref(hc_meta *meta, char short_name);
 
 // private utils
 
