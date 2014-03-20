@@ -37,7 +37,7 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
     hc_option hc_opt;
     while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1) {
         hc_opt = _hc_get_option_by_ref(meta, opt);
-        if (hc_opt.has_argument == 2 && optarg == NULL && argv[optind][0] != '-') {
+        if (hc_opt.has_argument == 2 && optarg == NULL && argv[optind] != NULL && argv[optind][0] != '-') {
             optarg = argv[optind];
         }
         printf("%c: %s\n", opt, optarg);
