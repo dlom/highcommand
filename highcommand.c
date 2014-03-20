@@ -75,12 +75,15 @@ int _hc_resize_opts_array_by_ref(hc_meta *meta) {
             return errno;
         }
     } else if (HC_META_NEARING_CAPACITY(meta)) {
-        meta->capacity *= 2;
-        hc_option *buffer = realloc(meta->options, meta->capacity * sizeof(hc_option));
+        if (meta->capacity * 2 > HC_MAX_OPTS_CAPACITY) {
+            return -1;
+        }
+        hc_option *buffer = realloc(meta->options, (meta->capacity * 2) * sizeof(hc_option));
         if (buffer != NULL) {
+            meta->capacity *= 2;
             meta->options = buffer;
         } else {
-            if (meta->capacity == meta->next_index + 1) {
+            if (meta->next_index == meta->capacity) { // we're full
                 return errno;
             } // else we still have room but we couldn't allocate memory this time
         }
