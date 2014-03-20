@@ -40,7 +40,7 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
         if (hc_opt.has_argument == 2 && optarg == NULL && argv[optind] != NULL && argv[optind][0] != '-') {
             optarg = argv[optind];
         }
-        printf("%c: %s\n", opt, optarg);
+        printf("%s: %s\n", hc_opt.long_name, optarg);
     }
 
     free(long_options);
