@@ -23,13 +23,6 @@ typedef struct {
     int has_argument;
 } hc_option;
 
-// typedef struct {
-//     enum {INT, STRING} type;
-//     union {
-
-//     }
-// }
-
 typedef struct {
     hc_option *options;
     int next_index;
@@ -43,7 +36,7 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]);
 
 // private stuffs
 
-int _hc_free_by_ref(hc_meta *meta);
+int _hc_free_meta_by_ref(hc_meta *meta);
 int _hc_resize_opts_array_by_ref(hc_meta *meta);
 char *_hc_get_short_options_by_ref(hc_meta *meta);
 struct option *_hc_get_long_options_by_ref(hc_meta *meta);

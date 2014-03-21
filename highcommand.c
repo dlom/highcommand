@@ -46,13 +46,12 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
 
     free(long_options);
     free(short_options);
-    _hc_free_by_ref(meta);
     return 0;
 }
 
 // private stuffs
 
-int _hc_free_by_ref(hc_meta *meta) {
+int _hc_free_meta_by_ref(hc_meta *meta) {
     if (meta->capacity == 0) return 0;
     int i;
     for (i = 0; i < meta->next_index; i++) {
@@ -175,6 +174,7 @@ int main(int argc, char *argv[]) {
     hc_opt_by_ref(&meta, "d", "different", "wow different");
     hc_opt_by_ref(&meta, "e=", "epic=", "that was epic dude");
     hc_opt_by_ref(&meta, "f=", "fail=", "failure to succeed");
+    hc_opt_by_ref(&meta, "h", "help", "show this message");
     test_cond("meta has 16 capacity", meta.capacity == 16);
     test_cond("meta has 7 as next index", meta.capacity == 16);
     test_cond("option 3 is still different", strcmp(meta.options[2].short_name, "b") == 0);
@@ -187,7 +187,7 @@ int main(int argc, char *argv[]) {
     test_subject("generating data for getopt_long");
     char *short_options = _hc_get_short_options_by_ref(&meta);
     struct option *long_options = _hc_get_long_options_by_ref(&meta);
-    test_cond("short optstring is valid", strcmp(short_options, ":n:a:b::c:de:f:") == 0);
+    test_cond("short optstring is valid", strcmp(short_options, ":n:a:b::c:de:f:h") == 0);
     test_cond("first option has valid name", strcmp(long_options[0].name, "name") == 0);
     test_cond("first option has required argument", long_options[0].has_arg == required_argument);
     test_cond("first option has no flag", long_options[0].flag == NULL);
@@ -205,6 +205,7 @@ int main(int argc, char *argv[]) {
 
     test_subject("run and free meta");
     hc_run_by_ref(&meta, argc, argv);
+    _hc_free_meta_by_ref(&meta);
     test_cond("meta has null options", meta.options == NULL);
     test_cond("meta has 0 as next index", meta.next_index == 0);
     test_cond("meta has 0 capacity", meta.capacity == 0);
