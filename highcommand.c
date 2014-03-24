@@ -110,8 +110,8 @@ struct option *_hc_get_long_options_by_ref(hc_meta *meta) {
 char *_hc_get_short_options_by_ref(hc_meta *meta) {
     char *short_options = malloc(((meta->next_index * 3) + 2) * sizeof(char)); // make sure we have enough room
     if (short_options == NULL) return NULL;
-    short_options[0] = ':';
-    int i, length = 1;
+    int i, length = 0;
+    short_options[length++] = ':';
     char *colons = "::";
     for (i = 0; i < meta->next_index; i++) {
         int colon_length = (2 - meta->options[i].has_argument);
