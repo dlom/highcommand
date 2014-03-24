@@ -41,7 +41,11 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
             optarg = argv[optind];
             if (strcmp(optarg, "--") == 0) optind++;
         }
-        printf("%s: %s\n", hc_opt.long_name, optarg);
+        // opt == ':', missing argument
+        // opt == '?', unknown option
+        printf("%s: %s (%c : %c)\n", hc_opt.long_name, optarg, opt, optopt);
+        if (opt == ':') printf("missing argument for %s\n", hc_opt.long_name);
+        if (opt == '?') printf("unknown option %c\n", optopt);
     }
 
     free(long_options);
@@ -203,8 +207,10 @@ int main(int argc, char *argv[]) {
     free(short_options);
     free(long_options);
 
-    test_subject("run and free meta");
+    test_subject("after running");
     hc_run_by_ref(&meta, argc, argv);
+
+    test_subject("free all resources");
     _hc_free_meta_by_ref(&meta);
     test_cond("meta has null options", meta.options == NULL);
     test_cond("meta has 0 as next index", meta.next_index == 0);
