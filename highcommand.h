@@ -22,6 +22,8 @@ typedef struct {
     hc_option *options;
     int next_index;
     int capacity;
+    int argc;
+    char **argv;
 } hc_meta;
 
 // by ref

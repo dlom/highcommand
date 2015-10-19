@@ -39,7 +39,6 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
     while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != EOF) {
         hc_opt = hc_get_option_by_ref(meta, (opt != ':' ? opt : optopt));
         if (hc_opt != NULL) {
-            // optional arguments only
             if (hc_opt->has_argument == optional_argument && optarg == NULL && HC_ARG_ISNT_OPTION(argv[optind])) {
                 if (strcmp(argv[optind], "--") != 0) {
                     optarg = argv[optind];
@@ -58,9 +57,10 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
             hc_opt->not_missing = 1;
             hc_opt->occurrences++;
             if (hc_opt->has_argument > 0 && optarg != NULL) {
+                free(hc_opt->value);
                 hc_opt->value = strdup(optarg);
             }
-            if (opt == ':') printf("Missing argument for %s\n", hc_opt->long_name);
+            if (opt == ':') printf("Missing argument for '--%s'\n", hc_opt->long_name);
         } else {
             if (optopt == '\0') {
                 printf("Unknown option: '%s'\n", argv[optind - 1]);
@@ -72,14 +72,8 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
         optopt = '\0';
     }
 
-    int new_argc = (argc - optind);
-    char **new_argv = (argv + optind);
-    if (new_argc > 0) {
-        printf("Remaining arguments:\n");
-        for (int i = 0; i < new_argc; i++) {
-            printf("  %s\n", new_argv[i]);
-        };
-    }
+    meta->argc = argc - optind;
+    meta->argv = argv + optind;
 
     free(long_options);
     free(short_options);
@@ -92,6 +86,7 @@ int hc_free_meta_by_ref(hc_meta *meta) {
         free(meta->options[i].short_name);
         free(meta->options[i].long_name);
         free(meta->options[i].help_text);
+        free(meta->options[i].value);
     }
     free(meta->options);
     meta->options = NULL;

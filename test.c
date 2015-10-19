@@ -21,6 +21,11 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    printf("Remaining arguments:\n");
+    for (int i = 0; i < meta.argc; i++) {
+        printf("  %s\n", meta.argv[i]);
+    };
+
     hc_free_meta_by_ref(&meta);
 
     return 0;
