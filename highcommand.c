@@ -139,11 +139,11 @@ hc_results hc_run(int argc, char *argv[]) {
 hc_results hc_get_results() {
     if (internal_meta.ran) {
         return (hc_results) {
-            .program_name = internal_meta.argv0,
-            .options      = internal_meta.options,
-            .count        = internal_meta.next_index,
-            .argc         = internal_meta.new_argc,
-            .argv         = internal_meta.new_argv
+            .name    = internal_meta.argv0,
+            .options = internal_meta.options,
+            .count   = internal_meta.next_index,
+            .argc    = internal_meta.new_argc,
+            .argv    = internal_meta.new_argv
         };
     } else {
         // TODO print informative warning

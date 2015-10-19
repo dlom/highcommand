@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
 
     if (hc_get_level("help")) {
         // display help
-        printf("How to get this message: %s --help\n", results.program_name);
+        printf("How to get this message: %s --help\n", results.name);
     }
 
     printf("Verbosity level set to %d\n", hc_get_level("verbose"));

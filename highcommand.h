@@ -29,7 +29,7 @@ typedef struct {
 } hc_meta;
 
 typedef struct {
-    char *program_name;
+    char *name;
     hc_option *options;
     int count;
     int argc;
