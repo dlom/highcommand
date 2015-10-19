@@ -27,7 +27,6 @@ int hc_opt_by_ref(hc_meta *meta, char *short_name, char *long_name, char *help_t
 }
 
 int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
-    printf("Starting with argc = %d and argv[0] = %s\n", argc, argv[0]);
     char *short_options = hc_get_short_options_by_ref(meta);
     struct option *long_options = hc_get_long_options_by_ref(meta);
     if (long_options == NULL || short_options == NULL) {
@@ -40,22 +39,41 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
     while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != EOF) {
         hc_opt = hc_get_option_by_ref(meta, (opt != ':' ? opt : optopt));
         // optional arguments only
-        if (hc_opt.has_argument == 2 && optarg == NULL && HC_ARG_ISNT_OPTION(argv[optind])) {
+        if (hc_opt.has_argument == optional_argument && optarg == NULL && HC_ARG_ISNT_OPTION(argv[optind])) {
             if (strcmp(argv[optind], "--") != 0) {
                 optarg = argv[optind];
             }
             optind++;
+        } else if (hc_opt.has_argument == required_argument && optarg != NULL && strcmp(optarg, "--") == 0) {
+            opt = ':';
+            optarg = NULL;
         }
+
         // opt == ':', missing argument
         // opt == '?', unknown option
-        printf("%s: %s\n", hc_opt.long_name, optarg);
-        if (opt == ':') printf("missing argument for %s\n", hc_opt.long_name);
-        if (opt == '?') printf("unknown option %c\n", optopt);
+        if (opt != '?') {
+            if (hc_opt.has_argument == 0) {
+                printf("Got option - %s\n", hc_opt.long_name);
+            } else {
+                printf("Got option - %s: %s\n", hc_opt.long_name, optarg);
+            }
+            if (opt == ':') printf("missing argument for %s\n", hc_opt.long_name);
+        } else {
+            if (optopt == '\0') {
+                printf("unknown option: '%s'\n", argv[optind - 1]);
+            } else {
+                printf("unknown option '-%c'\n", optopt);
+            }
+        }
+        optopt = '\0';
     }
 
     int new_argc = (argc - optind);
     char **new_argv = (argv + optind);
-    printf("Finished with argc = %d and argv[0] = %s\n", new_argc, new_argv[0]);
+    printf("Remaining arguments:\n");
+    for (int i = 0; i < new_argc; i++) {
+        printf("%s\n", new_argv[i]);
+    };
 
     free(long_options);
     free(short_options);
