@@ -1,16 +1,18 @@
 CC = gcc
 CC_FLAGS = -Wall -std=gnu99 -pedantic -g
-LD_FLAGS =
 
 .PHONY: all clean
 
 all: test
 
 test: test.c hc.h hc.o
-	$(CC) $(CC_FLAGS) test.c hc.o -o test $(LD_FLAGS)
+	$(CC) $(CC_FLAGS) test.c hc.o -o test
 
 hc.o: hc.c hc.h hc_private.h
-	$(CC) $(CC_FLAGS) -c hc.c -o hc.o $(LD_FLAGS)
+	$(CC) $(CC_FLAGS) -fPIC -c hc.c -o hc.o
+
+libhc.so: hc.o
+	$(CC) $(CC_FLAGS) -fPIC hc.o -o libhc.so -shared
 
 clean:
-	rm -f hc.o test
+	rm -f hc.o libhc.so test
