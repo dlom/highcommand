@@ -8,13 +8,14 @@
 #include <getopt.h>
 #include <stdio.h>
 
-#define HC_META_NEW {NULL, 0, 0}
-
 typedef struct {
     char *short_name;
     char *long_name;
     char *help_text;
     int has_argument;
+    int not_missing;
+    char *value;
+    int occurrences;
 } hc_option;
 
 typedef struct {
@@ -25,6 +26,7 @@ typedef struct {
 
 // by ref
 
+#define hc_new_meta() ((hc_meta){NULL, 0, 0})
 int hc_opt_by_ref(hc_meta *meta, char *short_name, char *long_name, char *help_text);
 int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]);
 int hc_free_meta_by_ref(hc_meta *meta);

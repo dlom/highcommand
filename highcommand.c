@@ -21,7 +21,7 @@ int hc_opt_by_ref(hc_meta *meta, char *short_name, char *long_name, char *help_t
         return errno;
     }
 
-    hc_option new_opt = {s, l, h, has_arg};
+    hc_option new_opt = {s, l, h, has_arg, 0, NULL, 0};
     meta->options[meta->next_index++] = new_opt;
     return 0;
 }
@@ -35,30 +35,32 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
     }
 
     int opt;
-    hc_option hc_opt;
+    hc_option *hc_opt;
     while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != EOF) {
         hc_opt = hc_get_option_by_ref(meta, (opt != ':' ? opt : optopt));
-        // optional arguments only
-        if (hc_opt.has_argument == optional_argument && optarg == NULL && HC_ARG_ISNT_OPTION(argv[optind])) {
-            if (strcmp(argv[optind], "--") != 0) {
-                optarg = argv[optind];
-                optind++;
+        if (hc_opt != NULL) {
+            // optional arguments only
+            if (hc_opt->has_argument == optional_argument && optarg == NULL && HC_ARG_ISNT_OPTION(argv[optind])) {
+                if (strcmp(argv[optind], "--") != 0) {
+                    optarg = argv[optind];
+                    optind++;
+                }
+            } else if (hc_opt->has_argument == required_argument && optarg != NULL && strcmp(optarg, "--") == 0) {
+                opt = ':';
+                optarg = NULL;
+                optind--;
             }
-        } else if (hc_opt.has_argument == required_argument && optarg != NULL && strcmp(optarg, "--") == 0) {
-            opt = ':';
-            optarg = NULL;
-            optind--;
         }
 
         // opt == ':', missing argument
         // opt == '?', unknown option
         if (opt != '?') {
-            if (hc_opt.has_argument == 0) {
-                printf("Got option - %s\n", hc_opt.long_name);
-            } else {
-                printf("Got option - %s: %s\n", hc_opt.long_name, optarg);
+            hc_opt->not_missing = 1;
+            hc_opt->occurrences++;
+            if (hc_opt->has_argument > 0 && optarg != NULL) {
+                hc_opt->value = strdup(optarg);
             }
-            if (opt == ':') printf("Missing argument for %s\n", hc_opt.long_name);
+            if (opt == ':') printf("Missing argument for %s\n", hc_opt->long_name);
         } else {
             if (optopt == '\0') {
                 printf("Unknown option: '%s'\n", argv[optind - 1]);
@@ -66,15 +68,18 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
                 printf("Unknown option '-%c'\n", optopt);
             }
         }
+
         optopt = '\0';
     }
 
     int new_argc = (argc - optind);
     char **new_argv = (argv + optind);
-    printf("Remaining arguments:\n");
-    for (int i = 0; i < new_argc; i++) {
-        printf("  %s\n", new_argv[i]);
-    };
+    if (new_argc > 0) {
+        printf("Remaining arguments:\n");
+        for (int i = 0; i < new_argc; i++) {
+            printf("  %s\n", new_argv[i]);
+        };
+    }
 
     free(long_options);
     free(short_options);
@@ -83,8 +88,7 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
 
 int hc_free_meta_by_ref(hc_meta *meta) {
     if (meta->capacity == 0) return 0;
-    int i;
-    for (i = 0; i < meta->next_index; i++) {
+    for (int i = 0; i < meta->next_index; i++) {
         free(meta->options[i].short_name);
         free(meta->options[i].long_name);
         free(meta->options[i].help_text);
@@ -126,22 +130,21 @@ struct option *hc_get_long_options_by_ref(hc_meta *meta) {
     struct option terminator = {NULL, 0, NULL, 0};
     struct option *long_options = malloc((meta->next_index + 1) * sizeof(struct option));
     if (long_options == NULL) return NULL;
-    int i;
-    for (i = 0; i < meta->next_index; i++) {
+    for (int i = 0; i < meta->next_index; i++) {
         struct option opt = {meta->options[i].long_name, meta->options[i].has_argument, NULL, meta->options[i].short_name[0]};
         long_options[i] = opt;
     }
-    long_options[i] = terminator;
+    long_options[meta->next_index] = terminator;
     return long_options;
 }
 
 char *hc_get_short_options_by_ref(hc_meta *meta) {
     char *short_options = malloc(((meta->next_index * 3) + 2) * sizeof(char)); // make sure we have enough room
     if (short_options == NULL) return NULL;
-    int i, length = 0;
+    int length = 0;
     short_options[length++] = ':';
     char *colons = "::";
-    for (i = 0; i < meta->next_index; i++) {
+    for (int i = 0; i < meta->next_index; i++) {
         int colon_length = (2 - meta->options[i].has_argument);
         if (colon_length > 2 || colon_length < 0) colon_length = 2;
         length += sprintf(short_options + length, "%c%s", meta->options[i].short_name[0], colons + colon_length);
@@ -156,14 +159,13 @@ char *hc_get_short_options_by_ref(hc_meta *meta) {
     return short_options;
 }
 
-hc_option hc_get_option_by_ref(hc_meta *meta, char short_name) {
-    int i;
-    for (i = 0; i < meta->next_index; i++) {
+hc_option *hc_get_option_by_ref(hc_meta *meta, char short_name) {
+    for (int i = 0; i < meta->next_index; i++) {
         if (meta->options[i].short_name[0] == short_name) {
-            return meta->options[i];
+            return meta->options + i;
         }
     }
-    return (hc_option) {"?", "?", "", 0};
+    return NULL;
 }
 
 // private utils
