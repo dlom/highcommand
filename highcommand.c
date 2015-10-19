@@ -42,11 +42,12 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
         if (hc_opt.has_argument == optional_argument && optarg == NULL && HC_ARG_ISNT_OPTION(argv[optind])) {
             if (strcmp(argv[optind], "--") != 0) {
                 optarg = argv[optind];
+                optind++;
             }
-            optind++;
         } else if (hc_opt.has_argument == required_argument && optarg != NULL && strcmp(optarg, "--") == 0) {
             opt = ':';
             optarg = NULL;
+            optind--;
         }
 
         // opt == ':', missing argument
@@ -72,7 +73,7 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
     char **new_argv = (argv + optind);
     printf("Remaining arguments:\n");
     for (int i = 0; i < new_argc; i++) {
-        printf("%s\n", new_argv[i]);
+        printf("  %s\n", new_argv[i]);
     };
 
     free(long_options);
