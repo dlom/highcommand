@@ -7,10 +7,10 @@ V_FLAGS = --leak-check=full --track-origins=yes
 
 all: highcommand-test
 
-highcommand-test: highcommand.c highcommand.h testhelp.h
+highcommand-test: highcommand.c highcommand.h highcommand_private.h testhelp.h
 	$(CC) $(FLAGS) highcommand.c -o highcommand-test
 
-highcommand-no-test: highcommand.c highcommand.h testhelp.h
+highcommand-no-test: highcommand.c highcommand.h highcommand_private.h testhelp.h
 	$(CC) $(FLAGS) $(NO_TEST) highcommand.c -o highcommand-no-test
 
 clean:

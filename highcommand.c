@@ -1,16 +1,17 @@
 #include "highcommand.h"
+#include "highcommand_private.h"
 
 // by ref
 
 int hc_opt_by_ref(hc_meta *meta, char *short_name, char *long_name, char *help_text) {
-    int err = _hc_resize_opts_array_by_ref(meta);
+    int err = hc_resize_opts_array_by_ref(meta);
     if (err != 0) return err;
 
     size_t short_length = strlen(short_name);
     size_t long_length = strlen(long_name);
 
-    int has_arg = _hc_extract_argument(short_name);
-    if  (has_arg != _hc_extract_argument(long_name)) return -1;
+    int has_arg = hc_extract_argument(short_name);
+    if  (has_arg != hc_extract_argument(long_name)) return -1;
 
     char *s = strndup(short_name, short_length - has_arg);
     char *l = strndup(long_name, long_length - has_arg);
@@ -26,8 +27,8 @@ int hc_opt_by_ref(hc_meta *meta, char *short_name, char *long_name, char *help_t
 }
 
 int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
-    char *short_options = _hc_get_short_options_by_ref(meta);
-    struct option *long_options = _hc_get_long_options_by_ref(meta);
+    char *short_options = hc_get_short_options_by_ref(meta);
+    struct option *long_options = hc_get_long_options_by_ref(meta);
     if (long_options == NULL || short_options == NULL) {
         free(short_options); free(long_options);
         return errno;
@@ -36,7 +37,7 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
     int opt;
     hc_option hc_opt;
     while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != EOF) {
-        hc_opt = _hc_get_option_by_ref(meta, (opt != ':' ? opt : optopt));
+        hc_opt = hc_get_option_by_ref(meta, (opt != ':' ? opt : optopt));
         if (hc_opt.has_argument == 2 && optarg == NULL && HC_ARG_ISNT_OPTION(argv[optind])) {
             optarg = argv[optind];
             if (strcmp(optarg, "--") == 0) optind++;
@@ -55,7 +56,7 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
 
 // private stuffs
 
-int _hc_free_meta_by_ref(hc_meta *meta) {
+int hc_free_meta_by_ref(hc_meta *meta) {
     if (meta->capacity == 0) return 0;
     int i;
     for (i = 0; i < meta->next_index; i++) {
@@ -70,7 +71,7 @@ int _hc_free_meta_by_ref(hc_meta *meta) {
     return 0;
 }
 
-int _hc_resize_opts_array_by_ref(hc_meta *meta) {
+int hc_resize_opts_array_by_ref(hc_meta *meta) {
     if (meta->options == NULL) {
         meta->capacity = HC_INITIAL_OPTS_CAPACITY;
         meta->options = malloc(meta->capacity * sizeof(hc_option));
@@ -94,7 +95,7 @@ int _hc_resize_opts_array_by_ref(hc_meta *meta) {
     return 0;
 }
 
-struct option *_hc_get_long_options_by_ref(hc_meta *meta) {
+struct option *hc_get_long_options_by_ref(hc_meta *meta) {
     struct option terminator = {NULL, 0, NULL, 0};
     struct option *long_options = malloc((meta->next_index + 1) * sizeof(struct option));
     if (long_options == NULL) return NULL;
@@ -107,7 +108,7 @@ struct option *_hc_get_long_options_by_ref(hc_meta *meta) {
     return long_options;
 }
 
-char *_hc_get_short_options_by_ref(hc_meta *meta) {
+char *hc_get_short_options_by_ref(hc_meta *meta) {
     char *short_options = malloc(((meta->next_index * 3) + 2) * sizeof(char)); // make sure we have enough room
     if (short_options == NULL) return NULL;
     int i, length = 0;
@@ -128,7 +129,7 @@ char *_hc_get_short_options_by_ref(hc_meta *meta) {
     return short_options;
 }
 
-hc_option _hc_get_option_by_ref(hc_meta *meta, char short_name) {
+hc_option hc_get_option_by_ref(hc_meta *meta, char short_name) {
     int i;
     for (i = 0; i < meta->next_index; i++) {
         if (meta->options[i].short_name[0] == short_name) {
@@ -140,7 +141,7 @@ hc_option _hc_get_option_by_ref(hc_meta *meta, char short_name) {
 
 // private utils
 
-int _hc_extract_argument(char *name) {
+int hc_extract_argument(char *name) {
     size_t length = strlen(name);
     if (length > 1 && name[length - 1] == '=') {
         return required_argument; // 1
@@ -180,7 +181,7 @@ int main(int argc, char *argv[]) {
     hc_opt_by_ref(&meta, "f=", "fail=", "failure to succeed");
     hc_opt_by_ref(&meta, "h", "help", "show this message");
     test_cond("meta has 16 capacity", meta.capacity == 16);
-    test_cond("meta has 7 as next index", meta.capacity == 16);
+    test_cond("meta has 8 as next index", meta.next_index == 8);
     test_cond("option 3 is still different", strcmp(meta.options[2].short_name, "b") == 0);
     test_cond("option 3 was altered", strcmp(meta.options[2].long_name, "boom") == 0);
     test_cond("option 3 has optional argument", meta.options[2].has_argument == 2);
@@ -189,8 +190,8 @@ int main(int argc, char *argv[]) {
     test_cond("option 5 has no argument", meta.options[4].has_argument == 0);
 
     test_subject("generating data for getopt_long");
-    char *short_options = _hc_get_short_options_by_ref(&meta);
-    struct option *long_options = _hc_get_long_options_by_ref(&meta);
+    char *short_options = hc_get_short_options_by_ref(&meta);
+    struct option *long_options = hc_get_long_options_by_ref(&meta);
     test_cond("short optstring is valid", strcmp(short_options, ":n:a:b::c:de:f:h") == 0);
     test_cond("first option has valid name", strcmp(long_options[0].name, "name") == 0);
     test_cond("first option has required argument", long_options[0].has_arg == required_argument);
@@ -211,7 +212,7 @@ int main(int argc, char *argv[]) {
     hc_run_by_ref(&meta, argc, argv);
 
     test_subject("free all resources");
-    _hc_free_meta_by_ref(&meta);
+    hc_free_meta_by_ref(&meta);
     test_cond("meta has null options", meta.options == NULL);
     test_cond("meta has 0 as next index", meta.next_index == 0);
     test_cond("meta has 0 capacity", meta.capacity == 0);
