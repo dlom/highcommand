@@ -17,7 +17,10 @@ int hc_opt_by_ref(hc_meta *meta, char *short_name, char *long_name, char *help_t
     size_t long_length = strlen(long_name);
 
     int has_arg = hc_extract_argument(short_name);
-    if  (has_arg != hc_extract_argument(long_name)) return -1;
+    if  (has_arg != hc_extract_argument(long_name)) {
+        // TODO print informative error message
+        return -1;
+    }
 
     char *s = strndup(short_name, short_length - has_arg);
     char *l = strndup(long_name, long_length - has_arg);
@@ -55,28 +58,28 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
                 optarg = NULL;
                 optind--;
             }
+        }
 
-            // opt == ':', missing argument
-            // opt == '?', unknown option
-            if (opt != '?') {
-                hc_opt->has_value = 1;
-                hc_opt->level++;
-                if (hc_opt->has_argument > 0 && optarg != NULL) {
-                    free(hc_opt->value);
-                    hc_opt->value = strdup(optarg);
-                }
-                if (opt == ':') {
-                    // TODO print informative warning message
-                    printf("Missing argument for '--%s'\n", hc_opt->long_name);
-                }
+        // opt == ':', missing argument
+        // opt == '?', unknown option
+        if (opt != '?' && hc_opt != NULL) {
+            hc_opt->has_value = 1;
+            hc_opt->level++;
+            if (hc_opt->has_argument > 0 && optarg != NULL) {
+                free(hc_opt->value);
+                hc_opt->value = strdup(optarg);
+            }
+            if (opt == ':') {
+                // TODO print informative warning message
+                printf("Missing argument for '--%s'\n", hc_opt->long_name);
+            }
+        } else {
+            if (optopt == '\0') {
+                // TODO print informative warning message
+                printf("Unknown option: '%s'\n", argv[optind - 1]);
             } else {
-                if (optopt == '\0') {
-                    // TODO print informative warning message
-                    printf("Unknown option: '%s'\n", argv[optind - 1]);
-                } else {
-                    // TODO print informative warning message
-                    printf("Unknown option '-%c'\n", optopt);
-                }
+                // TODO print informative warning message
+                printf("Unknown option '-%c'\n", optopt);
             }
         }
 
@@ -112,19 +115,28 @@ int hc_free_meta_by_ref(hc_meta *meta) {
 void hc_opt(char *short_name, char *long_name, char *help_text) {
     if (!internal_meta.ran) {
         int result = hc_opt_by_ref(&internal_meta, short_name, long_name, help_text);
-        if (!result) {
+        if (result != 0) {
             // TODO print informative error
         }
     }
 }
 
-void hc_run(int argc, char *argv[]) {
+hc_results hc_run(int argc, char *argv[]) {
     if (!internal_meta.ran) {
         int result = hc_run_by_ref(&internal_meta, argc, argv);
-        if (!result) {
+        if (result != 0) {
             // TODO print informative error
+            return (hc_results) { .options = NULL };
         }
+    } else {
+        // TODO print informative warning
     }
+    return (hc_results) {
+        .options = internal_meta.options,
+        .count   = internal_meta.next_index,
+        .argc    = internal_meta.argc,
+        .argv    = internal_meta.argv
+    };
 }
 
 void hc_cleanup() {
@@ -132,24 +144,39 @@ void hc_cleanup() {
     internal_meta = hc_new_meta();
 }
 
-hc_results hc_get_results() {
-    if (internal_meta.ran) {
-        return (hc_results) {
-            .options = internal_meta.options,
-            .count   = internal_meta.next_index,
-            .argc    = internal_meta.argc,
-            .argv    = internal_meta.argv
-        };
-    } else {
-        return (hc_results) { .options = NULL };
+int hc_has_value(char *long_name) {
+    for (int i = 0; i < internal_meta.next_index; i++) {
+        if (strcmp(internal_meta.options[i].long_name, long_name) == 0) {
+            return internal_meta.options[i].has_value;
+        }
     }
+    return NULL;
+
+}
+
+char *hc_get_value(char *long_name) {
+    for (int i = 0; i < internal_meta.next_index; i++) {
+        if (strcmp(internal_meta.options[i].long_name, long_name) == 0) {
+            return internal_meta.options[i].value;
+        }
+    }
+    return NULL;
+}
+
+int hc_get_level(char *long_name) {
+    for (int i = 0; i < internal_meta.next_index; i++) {
+        if (strcmp(internal_meta.options[i].long_name, long_name) == 0) {
+            return internal_meta.options[i].level;
+        }
+    }
+    return 0;
 }
 
 // private stuffs
 
 int hc_resize_opts_array_by_ref(hc_meta *meta) {
     if (meta->options == NULL) {
-        meta->options = malloc(meta->capacity * sizeof(hc_option));
+        meta->options = malloc(HC_INITIAL_OPTS_CAPACITY * sizeof(hc_option));
         if (meta->options == NULL) {
             return errno;
         }

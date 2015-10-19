@@ -44,8 +44,12 @@ int hc_free_meta_by_ref(hc_meta *meta);
 // global
 
 void hc_opt(char *short_name, char *long_name, char *help_text);
-void hc_run(int argc, char *argv[]);
+hc_results hc_run(int argc, char *argv[]);
 void hc_cleanup();
-hc_results hc_get_results();
+
+int hc_has_value(char *long_name);
+char *hc_get_value(char *long_name);
+int hc_get_level(char *long_name);
+
 
 #endif
