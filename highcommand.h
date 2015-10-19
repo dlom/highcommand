@@ -13,12 +13,13 @@ typedef struct {
     char *long_name;
     char *help_text;
     int has_argument;
-    int not_missing;
+    int has_value;
     char *value;
-    int occurrences;
+    int level;
 } hc_option;
 
 typedef struct {
+	int ran;
     hc_option *options;
     int next_index;
     int capacity;
@@ -26,11 +27,25 @@ typedef struct {
     char **argv;
 } hc_meta;
 
+typedef struct {
+	hc_option *options;
+	int count;
+	int argc;
+	char **argv;
+} hc_results;
+
 // by ref
 
-#define hc_new_meta() ((hc_meta){NULL, 0, 0})
+hc_meta hc_new_meta();
 int hc_opt_by_ref(hc_meta *meta, char *short_name, char *long_name, char *help_text);
 int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]);
 int hc_free_meta_by_ref(hc_meta *meta);
+
+// global
+
+void hc_opt(char *short_name, char *long_name, char *help_text);
+void hc_run(int argc, char *argv[]);
+void hc_cleanup();
+hc_results hc_get_results();
 
 #endif

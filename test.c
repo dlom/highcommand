@@ -1,20 +1,21 @@
 #include "highcommand.h"
 #include <stdio.h>
 
+
 int main(int argc, char *argv[]) {
-    hc_meta meta = hc_new_meta();
+    hc_opt("h",   "help",  "show this message");
+    hc_opt("n=",  "name=", "your name");
+    hc_opt("o=?", "opt=?", "optional arguments");
 
-    hc_opt_by_ref(&meta, "n=", "name=", "your name");
-    hc_opt_by_ref(&meta, "o=?", "opt=?", "optional arguments");
-    hc_opt_by_ref(&meta, "h", "help", "show this message");
+    hc_run(argc, argv);
 
-    hc_run_by_ref(&meta, argc, argv);
+    hc_results results = hc_get_results();
 
-    for (int i = 0; i < meta.next_index; i++) {
-        hc_option hc_opt = meta.options[i];
-        if (hc_opt.not_missing) {
-            if (hc_opt.has_argument == no_argument) {
-                printf("Option - %s (%d)\n", hc_opt.long_name, hc_opt.occurrences);
+    for (int i = 0; i < results.count; i++) {
+        hc_option hc_opt = results.options[i];
+        if (hc_opt.has_value) {
+            if (hc_opt.has_argument == 0) {
+                printf("Option - %s (%d)\n", hc_opt.long_name, hc_opt.level);
             } else {
                 printf("Option - %s: '%s'\n", hc_opt.long_name, hc_opt.value);
             }
@@ -22,11 +23,11 @@ int main(int argc, char *argv[]) {
     }
 
     printf("Remaining arguments:\n");
-    for (int i = 0; i < meta.argc; i++) {
-        printf("  %s\n", meta.argv[i]);
+    for (int i = 0; i < results.argc; i++) {
+        printf("  %s\n", results.argv[i]);
     };
 
-    hc_free_meta_by_ref(&meta);
+    hc_cleanup();
 
     return 0;
 }

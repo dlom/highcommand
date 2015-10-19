@@ -1,7 +1,13 @@
 #include "highcommand.h"
 #include "highcommand_private.h"
 
+static hc_meta internal_meta = HC_NEW_META;
+
 // by ref
+
+hc_meta hc_new_meta() {
+    return (hc_meta) HC_NEW_META;
+}
 
 int hc_opt_by_ref(hc_meta *meta, char *short_name, char *long_name, char *help_text) {
     int err = hc_resize_opts_array_by_ref(meta);
@@ -21,7 +27,7 @@ int hc_opt_by_ref(hc_meta *meta, char *short_name, char *long_name, char *help_t
         return errno;
     }
 
-    hc_option new_opt = {s, l, h, has_arg, 0, NULL, 0};
+    hc_option new_opt = { s, l, h, has_arg, 0, NULL, 0 };
     meta->options[meta->next_index++] = new_opt;
     return 0;
 }
@@ -49,23 +55,28 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
                 optarg = NULL;
                 optind--;
             }
-        }
 
-        // opt == ':', missing argument
-        // opt == '?', unknown option
-        if (opt != '?') {
-            hc_opt->not_missing = 1;
-            hc_opt->occurrences++;
-            if (hc_opt->has_argument > 0 && optarg != NULL) {
-                free(hc_opt->value);
-                hc_opt->value = strdup(optarg);
-            }
-            if (opt == ':') printf("Missing argument for '--%s'\n", hc_opt->long_name);
-        } else {
-            if (optopt == '\0') {
-                printf("Unknown option: '%s'\n", argv[optind - 1]);
+            // opt == ':', missing argument
+            // opt == '?', unknown option
+            if (opt != '?') {
+                hc_opt->has_value = 1;
+                hc_opt->level++;
+                if (hc_opt->has_argument > 0 && optarg != NULL) {
+                    free(hc_opt->value);
+                    hc_opt->value = strdup(optarg);
+                }
+                if (opt == ':') {
+                    // TODO print informative warning message
+                    printf("Missing argument for '--%s'\n", hc_opt->long_name);
+                }
             } else {
-                printf("Unknown option '-%c'\n", optopt);
+                if (optopt == '\0') {
+                    // TODO print informative warning message
+                    printf("Unknown option: '%s'\n", argv[optind - 1]);
+                } else {
+                    // TODO print informative warning message
+                    printf("Unknown option '-%c'\n", optopt);
+                }
             }
         }
 
@@ -74,6 +85,7 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
 
     meta->argc = argc - optind;
     meta->argv = argv + optind;
+    meta->ran = 1;
 
     free(long_options);
     free(short_options);
@@ -95,18 +107,56 @@ int hc_free_meta_by_ref(hc_meta *meta) {
     return 0;
 }
 
+// global
+
+void hc_opt(char *short_name, char *long_name, char *help_text) {
+    if (!internal_meta.ran) {
+        int result = hc_opt_by_ref(&internal_meta, short_name, long_name, help_text);
+        if (!result) {
+            // TODO print informative error
+        }
+    }
+}
+
+void hc_run(int argc, char *argv[]) {
+    if (!internal_meta.ran) {
+        int result = hc_run_by_ref(&internal_meta, argc, argv);
+        if (!result) {
+            // TODO print informative error
+        }
+    }
+}
+
+void hc_cleanup() {
+    hc_free_meta_by_ref(&internal_meta);
+    internal_meta = hc_new_meta();
+}
+
+hc_results hc_get_results() {
+    if (internal_meta.ran) {
+        return (hc_results) {
+            .options = internal_meta.options,
+            .count   = internal_meta.next_index,
+            .argc    = internal_meta.argc,
+            .argv    = internal_meta.argv
+        };
+    } else {
+        return (hc_results) { .options = NULL };
+    }
+}
+
 // private stuffs
 
 int hc_resize_opts_array_by_ref(hc_meta *meta) {
     if (meta->options == NULL) {
-        meta->capacity = HC_INITIAL_OPTS_CAPACITY;
         meta->options = malloc(meta->capacity * sizeof(hc_option));
         if (meta->options == NULL) {
             return errno;
         }
+        meta->capacity = HC_INITIAL_OPTS_CAPACITY;
     } else if (HC_META_NEARING_CAPACITY(meta)) {
         if (meta->capacity * 2 > HC_MAX_OPTS_CAPACITY) {
-            return -1;
+            return -1; // too many options (shouldn't ever happen)
         }
         hc_option *buffer = realloc(meta->options, (meta->capacity * 2) * sizeof(hc_option));
         if (buffer != NULL) {
@@ -122,11 +172,16 @@ int hc_resize_opts_array_by_ref(hc_meta *meta) {
 }
 
 struct option *hc_get_long_options_by_ref(hc_meta *meta) {
-    struct option terminator = {NULL, 0, NULL, 0};
+    struct option terminator = { NULL, 0, NULL, 0 };
     struct option *long_options = malloc((meta->next_index + 1) * sizeof(struct option));
     if (long_options == NULL) return NULL;
     for (int i = 0; i < meta->next_index; i++) {
-        struct option opt = {meta->options[i].long_name, meta->options[i].has_argument, NULL, meta->options[i].short_name[0]};
+        struct option opt = {
+            .name    = meta->options[i].long_name,
+            .has_arg = meta->options[i].has_argument,
+            .flag    = NULL,
+            .val     = meta->options[i].short_name[0]
+        };
         long_options[i] = opt;
     }
     long_options[meta->next_index] = terminator;
