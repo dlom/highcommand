@@ -162,8 +162,7 @@ int hc_has_value(char *long_name) {
             return internal_meta.options[i].has_value;
         }
     }
-    return NULL;
-
+    return 0;
 }
 
 char *hc_get_value(char *long_name) {
