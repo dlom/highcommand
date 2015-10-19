@@ -1,5 +1,5 @@
-#include "highcommand.h"
-#include "highcommand_private.h"
+#include "hc.h"
+#include "hc_private.h"
 
 static hc_meta internal_meta = HC_NEW_META;
 
