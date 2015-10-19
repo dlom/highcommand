@@ -43,6 +43,8 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
         return errno;
     }
 
+    meta->argv0 = argv[0];
+
     int opt;
     hc_option *hc_opt;
     while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != EOF) {
@@ -86,8 +88,8 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
         optopt = '\0';
     }
 
-    meta->argc = argc - optind;
-    meta->argv = argv + optind;
+    meta->new_argc = argc - optind;
+    meta->new_argv = argv + optind;
     meta->ran = 1;
 
     free(long_options);
@@ -131,12 +133,22 @@ hc_results hc_run(int argc, char *argv[]) {
     } else {
         // TODO print informative warning
     }
-    return (hc_results) {
-        .options = internal_meta.options,
-        .count   = internal_meta.next_index,
-        .argc    = internal_meta.argc,
-        .argv    = internal_meta.argv
-    };
+    return hc_get_results();
+}
+
+hc_results hc_get_results() {
+    if (internal_meta.ran) {
+        return (hc_results) {
+            .program_name = internal_meta.argv0,
+            .options      = internal_meta.options,
+            .count        = internal_meta.next_index,
+            .argc         = internal_meta.new_argc,
+            .argv         = internal_meta.new_argv
+        };
+    } else {
+        // TODO print informative warning
+        return (hc_results) { .options = NULL };
+    }
 }
 
 void hc_cleanup() {

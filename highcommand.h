@@ -19,19 +19,21 @@ typedef struct {
 } hc_option;
 
 typedef struct {
-	int ran;
+    int ran;
     hc_option *options;
     int next_index;
     int capacity;
-    int argc;
-    char **argv;
+    int new_argc;
+    char **new_argv;
+    char *argv0;
 } hc_meta;
 
 typedef struct {
-	hc_option *options;
-	int count;
-	int argc;
-	char **argv;
+    char *program_name;
+    hc_option *options;
+    int count;
+    int argc;
+    char **argv;
 } hc_results;
 
 // by ref
@@ -44,12 +46,12 @@ int hc_free_meta_by_ref(hc_meta *meta);
 // global
 
 void hc_opt(char *short_name, char *long_name, char *help_text);
+hc_results hc_get_results();
 hc_results hc_run(int argc, char *argv[]);
 void hc_cleanup();
 
 int hc_has_value(char *long_name);
 char *hc_get_value(char *long_name);
 int hc_get_level(char *long_name);
-
 
 #endif

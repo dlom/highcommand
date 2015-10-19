@@ -3,7 +3,7 @@
 
 // private stuffs
 
-#define HC_NEW_META { 0, NULL, 0, 0, 0, NULL }
+#define HC_NEW_META { 0, NULL, 0, 0, 0, NULL, NULL }
 
 #define HC_MAX_OPTS_CAPACITY (64)
 #define HC_INITIAL_OPTS_CAPACITY (8)

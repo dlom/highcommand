@@ -1,7 +1,6 @@
 #include "highcommand.h"
 #include <stdio.h>
 
-
 int main(int argc, char *argv[]) {
     hc_opt("h",   "help",    "show this message");
     hc_opt("v",   "verbose", "verbosity (use multiple times)");
@@ -12,7 +11,7 @@ int main(int argc, char *argv[]) {
 
     if (hc_get_level("help")) {
         // display help
-        printf("How to get this message: %s --help\n", argv[0]);
+        printf("How to get this message: %s --help\n", results.program_name);
     }
 
     printf("Verbosity level set to %d\n", hc_get_level("verbose"));
