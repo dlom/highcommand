@@ -27,5 +27,6 @@ typedef struct {
 
 int hc_opt_by_ref(hc_meta *meta, char *short_name, char *long_name, char *help_text);
 int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]);
+int hc_free_meta_by_ref(hc_meta *meta);
 
 #endif

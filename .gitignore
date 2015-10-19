@@ -1,2 +1,2 @@
-highcommand-test
-highcommand-no-test
+*.o
+test

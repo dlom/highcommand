@@ -58,12 +58,12 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
             } else {
                 printf("Got option - %s: %s\n", hc_opt.long_name, optarg);
             }
-            if (opt == ':') printf("missing argument for %s\n", hc_opt.long_name);
+            if (opt == ':') printf("Missing argument for %s\n", hc_opt.long_name);
         } else {
             if (optopt == '\0') {
-                printf("unknown option: '%s'\n", argv[optind - 1]);
+                printf("Unknown option: '%s'\n", argv[optind - 1]);
             } else {
-                printf("unknown option '-%c'\n", optopt);
+                printf("Unknown option '-%c'\n", optopt);
             }
         }
         optopt = '\0';
@@ -81,8 +81,6 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
     return 0;
 }
 
-// private stuffs
-
 int hc_free_meta_by_ref(hc_meta *meta) {
     if (meta->capacity == 0) return 0;
     int i;
@@ -97,6 +95,8 @@ int hc_free_meta_by_ref(hc_meta *meta) {
     meta->capacity = 0;
     return 0;
 }
+
+// private stuffs
 
 int hc_resize_opts_array_by_ref(hc_meta *meta) {
     if (meta->options == NULL) {
@@ -178,74 +178,3 @@ int hc_extract_argument(char *name) {
         return no_argument; // 0
     }
 }
-
-#ifdef HIGH_COMMAND_TEST
-#include "testhelp.h"
-
-int main(int argc, char *argv[]) {
-    test_subject("brand new meta");
-    hc_meta meta = HC_META_NEW;
-    test_cond("meta has null options", meta.options == NULL);
-    test_cond("meta has 0 as next index", meta.next_index == 0);
-    test_cond("meta has 0 capacity", meta.capacity == 0);
-
-    test_subject("one option in meta")
-    hc_opt_by_ref(&meta, "n=", "name=", "the name bro");
-    test_cond("meta has non-null options", meta.options != NULL);
-    test_cond("meta has 8 capacity", meta.capacity == 8);
-    test_cond("meta has 1 as next index", meta.next_index == 1);
-    test_cond("first option is 'n'", strcmp(meta.options[0].short_name, "n") == 0);
-    test_cond("first option is 'name'", strcmp(meta.options[0].long_name, "name") == 0);
-    test_cond("first option has help text 'the name bro'", strcmp(meta.options[0].help_text, "the name bro") == 0);
-    test_cond("first option has non-optional argument", meta.options[0].has_argument == 1);
-
-    test_subject("enough options for meta resize");
-    hc_opt_by_ref(&meta, "a=", "amazing=", "it's amazing");
-    hc_opt_by_ref(&meta, "b=?", "boom=?", "boom you're dead");
-    hc_opt_by_ref(&meta, "c=", "crazy=", "that's crazy");
-    hc_opt_by_ref(&meta, "d", "different", "wow different");
-    hc_opt_by_ref(&meta, "e=", "epic=", "that was epic dude");
-    hc_opt_by_ref(&meta, "f=", "fail=", "failure to succeed");
-    hc_opt_by_ref(&meta, "h", "help", "show this message");
-    test_cond("meta has 16 capacity", meta.capacity == 16);
-    test_cond("meta has 8 as next index", meta.next_index == 8);
-    test_cond("option 3 is still different", strcmp(meta.options[2].short_name, "b") == 0);
-    test_cond("option 3 was altered", strcmp(meta.options[2].long_name, "boom") == 0);
-    test_cond("option 3 has optional argument", meta.options[2].has_argument == 2);
-    test_cond("option 5 is still different", strcmp(meta.options[4].short_name, "d") == 0);
-    test_cond("option 5 wasn't altered", strcmp(meta.options[4].long_name, "different") == 0);
-    test_cond("option 5 has no argument", meta.options[4].has_argument == 0);
-
-    test_subject("generating data for getopt_long");
-    char *short_options = hc_get_short_options_by_ref(&meta);
-    struct option *long_options = hc_get_long_options_by_ref(&meta);
-    test_cond("short optstring is valid", strcmp(short_options, ":n:a:b::c:de:f:h") == 0);
-    test_cond("first option has valid name", strcmp(long_options[0].name, "name") == 0);
-    test_cond("first option has required argument", long_options[0].has_arg == required_argument);
-    test_cond("first option has no flag", long_options[0].flag == NULL);
-    test_cond("first option has valid val", long_options[0].val == 'n');
-    test_cond("third option has valid name", strcmp(long_options[2].name, "boom") == 0);
-    test_cond("third option has optional argument", long_options[2].has_arg == optional_argument);
-    test_cond("third option has no flag", long_options[2].flag == NULL);
-    test_cond("third option has valid val", long_options[2].val == 'b');
-    test_cond("fifth option has valid name", strcmp(long_options[4].name, "different") == 0);
-    test_cond("fifth option has no argument", long_options[4].has_arg == no_argument);
-    test_cond("fifth option has no flag", long_options[4].flag == NULL);
-    test_cond("fifth option has valid val", long_options[4].val == 'd');
-    free(short_options);
-    free(long_options);
-
-    test_subject("after running");
-    hc_run_by_ref(&meta, argc, argv);
-
-    test_subject("free all resources");
-    hc_free_meta_by_ref(&meta);
-    test_cond("meta has null options", meta.options == NULL);
-    test_cond("meta has 0 as next index", meta.next_index == 0);
-    test_cond("meta has 0 capacity", meta.capacity == 0);
-
-    test_report();
-    return 0;
-}
-
-#endif
