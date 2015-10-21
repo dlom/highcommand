@@ -13,6 +13,7 @@ typedef struct {
     char *long_name;
     char *help_text;
     int has_argument;
+    int is_present;
     int has_value;
     char *value;
     int level;
@@ -50,6 +51,7 @@ hc_results hc_get_results();
 hc_results hc_run(int argc, char *argv[]);
 void hc_cleanup();
 
+int hc_is_present(char *long_name);
 int hc_has_value(char *long_name);
 char *hc_get_value(char *long_name);
 int hc_get_level(char *long_name);

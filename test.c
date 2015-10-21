@@ -9,7 +9,7 @@ int main(int argc, char *argv[]) {
 
     hc_results results = hc_run(argc, argv);
 
-    if (hc_get_level("help")) {
+    if (hc_is_present("help")) {
         // display help
         printf("How to get this message: %s --help\n", results.name);
     }
@@ -20,8 +20,12 @@ int main(int argc, char *argv[]) {
         printf("Hello %s\n", hc_get_value("name"));
     }
 
-    if (hc_has_value("opt")) {
-        printf("'%s' was the value passed to the optional flag\n", hc_get_value("opt"));
+    if (hc_is_present("opt")) {
+        if (hc_has_value("opt")) {
+            printf("'%s' was the value passed to the optional flag\n", hc_get_value("opt"));
+        } else {
+            printf("No value was passed to the optional flag\n");
+        }
     }
 
     printf("Remaining arguments:\n");

@@ -30,7 +30,7 @@ int hc_opt_by_ref(hc_meta *meta, char *short_name, char *long_name, char *help_t
         return errno;
     }
 
-    hc_option new_opt = { s, l, h, has_arg, 0, NULL, 0 };
+    hc_option new_opt = { s, l, h, has_arg, 0, 0, NULL, 0 };
     meta->options[meta->next_index++] = new_opt;
     return 0;
 }
@@ -65,15 +65,17 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
         // opt == ':', missing argument
         // opt == '?', unknown option
         if (opt != '?' && hc_opt != NULL) {
-            hc_opt->has_value = 1;
-            hc_opt->level++;
-            if (hc_opt->has_argument > 0 && optarg != NULL) {
-                free(hc_opt->value);
-                hc_opt->value = strdup(optarg);
-            }
-            if (opt == ':') {
+            if (opt == ':' && hc_opt->has_argument == required_argument) {
                 // TODO print informative warning message
                 printf("Missing argument for '--%s'\n", hc_opt->long_name);
+            } else {
+                hc_opt->is_present = 1;
+                hc_opt->level++;
+                if (hc_opt->has_argument > 0 && optarg != NULL) {
+                    free(hc_opt->value);
+                    hc_opt->value = strdup(optarg);
+                    hc_opt->has_value = 1;
+                }
             }
         } else {
             if (optopt == '\0') {
@@ -156,29 +158,34 @@ void hc_cleanup() {
     internal_meta = hc_new_meta();
 }
 
+int hc_is_present(char *long_name) {
+    hc_option *hc_opt = hc_get_option_by_ref_long(&internal_meta, long_name);
+    if (hc_opt != NULL) {
+        return hc_opt->is_present;
+    }
+    return 0;
+}
+
 int hc_has_value(char *long_name) {
-    for (int i = 0; i < internal_meta.next_index; i++) {
-        if (strcmp(internal_meta.options[i].long_name, long_name) == 0) {
-            return internal_meta.options[i].has_value;
-        }
+    hc_option *hc_opt = hc_get_option_by_ref_long(&internal_meta, long_name);
+    if (hc_opt != NULL) {
+        return hc_opt->has_value;
     }
     return 0;
 }
 
 char *hc_get_value(char *long_name) {
-    for (int i = 0; i < internal_meta.next_index; i++) {
-        if (strcmp(internal_meta.options[i].long_name, long_name) == 0) {
-            return internal_meta.options[i].value;
-        }
+    hc_option *hc_opt = hc_get_option_by_ref_long(&internal_meta, long_name);
+    if (hc_opt != NULL) {
+        return hc_opt->value;
     }
     return NULL;
 }
 
 int hc_get_level(char *long_name) {
-    for (int i = 0; i < internal_meta.next_index; i++) {
-        if (strcmp(internal_meta.options[i].long_name, long_name) == 0) {
-            return internal_meta.options[i].level;
-        }
+    hc_option *hc_opt = hc_get_option_by_ref_long(&internal_meta, long_name);
+    if (hc_opt != NULL) {
+        return hc_opt->level;
     }
     return 0;
 }
@@ -250,6 +257,15 @@ char *hc_get_short_options_by_ref(hc_meta *meta) {
 hc_option *hc_get_option_by_ref(hc_meta *meta, char short_name) {
     for (int i = 0; i < meta->next_index; i++) {
         if (meta->options[i].short_name[0] == short_name) {
+            return meta->options + i;
+        }
+    }
+    return NULL;
+}
+
+hc_option *hc_get_option_by_ref_long(hc_meta *meta, char *long_name) {
+    for (int i = 0; i < meta->next_index; i++) {
+        if (strcmp(meta->options[i].long_name, long_name) == 0) {
             return meta->options + i;
         }
     }

@@ -16,6 +16,7 @@ int hc_resize_opts_array_by_ref(hc_meta *meta);
 char *hc_get_short_options_by_ref(hc_meta *meta);
 struct option *hc_get_long_options_by_ref(hc_meta *meta);
 hc_option *hc_get_option_by_ref(hc_meta *meta, char short_name);
+hc_option *hc_get_option_by_ref_long(hc_meta *meta, char *long_name);
 
 // private utils
 
