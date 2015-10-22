@@ -1,5 +1,5 @@
 CC = gcc
-CC_FLAGS = -Wall -std=gnu99 -pedantic -g
+CC_FLAGS = -Wall -Wextra -std=gnu99 -pedantic -g
 
 .PHONY: all clean lib
 

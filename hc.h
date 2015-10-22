@@ -1,13 +1,6 @@
 #ifndef HIGH_COMMAND_H__
 #define HIGH_COMMAND_H__
 
-#include <stdlib.h>
-#include <stddef.h>
-#include <string.h>
-#include <errno.h>
-#include <getopt.h>
-#include <stdio.h>
-
 typedef struct {
     char *short_name;
     char *long_name;

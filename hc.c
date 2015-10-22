@@ -1,6 +1,13 @@
 #include "hc.h"
 #include "hc_private.h"
 
+#include <stdlib.h>
+#include <stddef.h>
+#include <string.h>
+#include <errno.h>
+#include <getopt.h>
+#include <stdio.h>
+
 static hc_meta internal_meta = HC_NEW_META;
 
 // by ref
@@ -100,6 +107,7 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
 }
 
 int hc_free_meta_by_ref(hc_meta *meta) {
+    meta->ran = 0;
     if (meta->capacity == 0) return 0;
     for (int i = 0; i < meta->next_index; i++) {
         free(meta->options[i].short_name);
@@ -111,6 +119,9 @@ int hc_free_meta_by_ref(hc_meta *meta) {
     meta->options = NULL;
     meta->next_index = 0;
     meta->capacity = 0;
+    meta->new_argc = 0;
+    meta->new_argv = NULL;
+    meta->argv0 = NULL;
     return 0;
 }
 
