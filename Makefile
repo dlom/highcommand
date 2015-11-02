@@ -16,7 +16,7 @@ libhc.a: hc.o
 	ar rcs libhc.a hc.o
 
 install: libhc.a hc.h
-	install -Dm755 libhc.a $(DESTDIR)$(LIBDIR)/libhc.a
+	install -Dm644 libhc.a $(DESTDIR)$(LIBDIR)/libhc.a
 	install -Dm644 hc.h $(DESTDIR)$(INCLUDEDIR)/hc.h
 
 clean:
