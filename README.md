@@ -1,4 +1,2 @@
-High Command
-============
-
-A modern way to create command-line interfaces
+highcommand(3) -- getopt() for the future
+=========================================

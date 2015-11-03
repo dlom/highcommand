@@ -54,6 +54,7 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
 
     int opt;
     hc_option *hc_opt;
+    optind = 0;
     while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != EOF) {
         hc_opt = hc_get_option_by_ref(meta, (opt != ':' ? opt : optopt));
         if (hc_opt != NULL) {
@@ -107,6 +108,7 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
 }
 
 int hc_free_meta_by_ref(hc_meta *meta) {
+    if (meta == NULL) return;
     meta->ran = 0;
     if (meta->capacity == 0) return 0;
     for (int i = 0; i < meta->next_index; i++) {

@@ -40,8 +40,8 @@ int hc_free_meta_by_ref(hc_meta *meta);
 // global
 
 void hc_opt(char *short_name, char *long_name, char *help_text);
-hc_results hc_get_results();
 hc_results hc_run(int argc, char *argv[]);
+hc_results hc_get_results();
 void hc_cleanup();
 
 int hc_is_present(char *long_name);
