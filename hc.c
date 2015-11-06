@@ -107,10 +107,10 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
     return 0;
 }
 
-int hc_free_meta_by_ref(hc_meta *meta) {
+void hc_free_meta_by_ref(hc_meta *meta) {
     if (meta == NULL) return;
     meta->ran = 0;
-    if (meta->capacity == 0) return 0;
+    if (meta->capacity == 0) return;
     for (int i = 0; i < meta->next_index; i++) {
         free(meta->options[i].short_name);
         free(meta->options[i].long_name);
@@ -124,7 +124,7 @@ int hc_free_meta_by_ref(hc_meta *meta) {
     meta->new_argc = 0;
     meta->new_argv = NULL;
     meta->argv0 = NULL;
-    return 0;
+    return;
 }
 
 // global

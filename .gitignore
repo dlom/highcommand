@@ -2,3 +2,5 @@
 *.so
 *.a
 test*
+man/*
+!man/*.ronn

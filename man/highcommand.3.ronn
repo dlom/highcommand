@@ -1,0 +1,151 @@
+highcommand(3) -- getopt() for the future
+=========================================
+
+## SYNOPSIS
+
+`#include <hc.h>`
+
+ - `void` `hc_opt`(`char` \*<short\_name>, `char` \*<long\_name>, `char` \*<help\_text>);
+ - `hc_results` `hc_run`(`int` <argc>, `char` \*<argv>[]);
+ - `hc_results` `hc_get_results`();
+ - `void` `hc_cleanup`();
+
+## DESCRIPTION
+
+The `hc_opt`() function defines an option that will be used by `hc_run()` to
+determine how to parse the options internally.  <short\_name> and <long\_name>
+are the values searched for by `hc_run`(), while <help\_text> is used
+internally to generate output for `-h`|`--help`.  Additionally, <long\_name>
+is also used when retrieving values from the `hc_results` object.  All three
+arguments are required to be present and non-`NULL`.  If an option would
+require an argument, append '=' to both <short\_name> and <long\_name>.  If an
+option would optionally require an argument instead, append '=?' instead.
+
+The `hc_run`() function parses a given vector of arguments, based on the
+options defined using `hc_opt`().  It's arguments, <argc> and <argv> can be
+any count/vector combination, but the arguments from `main`() work just fine.
+Internally, `getopt_long`(3) is used to parse the arguments, with a couple of
+caveats.  Notably, the literal '--' __always__ signifies the end of option
+parsing, even if it would be a valid argument for an option, meaning that '--'
+will __never__ be an argument for an option.  Additionally, options with
+optional arguments will always try to find a valid argument.  `hc_run`() is
+fairly smart about handling unknown options or missing required arguments, and
+will print out a semi-descriptive message.
+
+The `hc_get_results`() function returns the same `hc_results` object that
+`hc_run`() returns, but only if `hc_run`() has ran.  If not, an empty
+`hc_results` object is returned instead.
+
+The `hc_cleanup`() function cleans up all the data produced by `hc_opt`()
+calls and `hc_run`().  Make sure to call this if you don't want memory
+leaks in your program.  Additionally, this will reset the internal state,
+which resets all options, allowing you to define new options with `hc_opt`(),
+and call `hc_run`() with different arguments.
+
+## RETURN VALUE
+
+There are 2 different types that are returned by `hc_run`() and
+`hc_get_results`(): The `hc_results` object, and the `hc_option` object.  The
+latter is included only as an array of of the former.  These objects are
+`typedef`'d structs.
+
+    typedef struct {
+        char *name;
+        hc_option *options;
+        int count;
+        int argc;
+        char **argv;
+    } hc_results;
+
+    typedef struct {
+        char *short_name;
+        char *long_name;
+        char *help_text;
+        int has_argument;
+        int is_present;
+        int has_value;
+        char *value;
+        int level;
+    } hc_option;
+
+Please note that the `count` field of the `hc_results` object is the size of
+the `options` array, and the the `has_argument` field of the `hc_option`
+argument indicates whether the option has a required (1), optional (2), or no
+argument (0).
+
+## NOTES
+
+`hc_run`() __will__ permute the original <argv> argument so that all non-option
+values are at the end. See `getopt`(3) for more information.
+
+Additionally, strings in the `hc_results` object (which include the <argv>
+array as well as the values of each `hc_option`) will not be modified or freed
+until `hc_cleanup`() is called, and as such, are available to use without
+needing to be copied and freed, such as by `strdup`(3).
+
+The astute reader will also notice that there are some other public functions
+declared in `<hc.h>`.  These functions enable a finer-grained control over the
+option declaring and parsing process, and though they are available, they are
+recommended only for users who understand how they work and why they are
+useful.  The functions outlined in the manual should be sufficient for almost
+all use cases.
+
+## EXAMPLE
+
+An extremely basic example of the features of `highcommand`.
+
+    #include <hc.h>
+    #include <stdio.h>
+
+    int main(int argc, char *argv[]) {
+        hc_opt("h",   "help",    "show this message");
+        hc_opt("v",   "verbose", "verbosity (use multiple times)");
+        hc_opt("n=",  "name=",   "your name");
+        hc_opt("o=?", "opt=?",   "optional arguments");
+
+        hc_results results = hc_run(argc, argv);
+
+        if (hc_is_present("help")) {
+            // display help
+            printf("How to get this message: %s --help\n", results.name);
+        }
+
+        printf("Verbosity level set to %d\n", hc_get_level("verbose"));
+
+        if (hc_has_value("name")) {
+            printf("Hello %s\n", hc_get_value("name"));
+        }
+
+        if (hc_is_present("opt")) {
+            if (hc_has_value("opt")) {
+                printf("'%s' was the optional value\n", hc_get_value("opt"));
+            } else {
+                printf("No optional value was given\n");
+            }
+        }
+
+        if (results.argc > 0) {
+            printf("Remaining arguments:\n");
+            for (int i = 0; i < results.argc; i++) {
+                printf("  %s\n", results.argv[i]);
+            };
+        }
+
+        hc_cleanup();
+
+        return 0;
+    }
+
+## BUGS
+
+Undoubtedly. Report them or discuss them at:
+
+    https://github.com/dlom/highcommand/issues
+
+## AUTHOR
+
+Mark Old (<https://github.com/dlom>)
+
+## SEE ALSO
+
+`getopt`(3), `getopt_long`(3)
