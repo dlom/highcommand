@@ -1,6 +1,7 @@
 *.o
 *.so
 *.a
-test*
 man/*
 !man/*.ronn
+tests/*
+!tests/*.c
