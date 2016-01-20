@@ -16,7 +16,7 @@ TEST_OUTPUT = TAP
 
 .PHONY: all install clean doc test check
 
-all: libhc.a man/highcommand.3 $(MANPAGES)
+all: libhc.a doc
 
 hc.o: hc.c hc.h hc_private.h
 	$(CC) $(CFLAGS) -c hc.c -o hc.o
@@ -29,6 +29,8 @@ install: libhc.a hc.h hc.h man/highcommand.3 $(MANPAGES)
 	$(INSTALL) -Dm644 hc.h $(DESTDIR)$(INCLUDEDIR)/hc.h
 	$(INSTALL) -Dm644 man/highcommand.3 $(DESTDIR)$(MANDIR)/highcommand.3
 	$(INSTALL)  -m644 $(MANPAGES) $(DESTDIR)$(MANDIR)
+
+doc: man/highcommand.3 $(MANPAGES)
 
 man/highcommand.3: man/highcommand.3.ronn
 	ronn --manual="High Command" --organization="Mark Old" --roff man/highcommand.3.ronn
