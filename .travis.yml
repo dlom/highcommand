@@ -1,0 +1,11 @@
+language: c
+script: make check
+
+compiler:
+  - clang
+  - gcc
+
+addons:
+  apt:
+    packages:
+      - libcmocka-dev
