@@ -1,12 +1,6 @@
 language: c
-script: make check
+script: make libhc.a
 
 compiler:
   - clang
   - gcc
-
-sudo: required
-dist: trusty
-install:
- - sudo apt-get -qq update
- - sudo apt-get install -y libcmocka-dev
