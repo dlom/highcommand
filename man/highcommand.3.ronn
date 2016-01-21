@@ -9,6 +9,10 @@ highcommand(3) -- getopt() for the future
  - `hc_results` `hc_run`(`int` <argc>, `char` \*<argv>[]);
  - `hc_results` `hc_get_results`();
  - `void` `hc_cleanup`();
+ - `int` `hc_is_present`(`char` \*<long\_name>);
+ - `int` `hc_has_value`(`char` \*<long\_name>);
+ - `char` \*`hc_get_value`(`char` \*<long\_name>);
+ - `int` `hc_get_level`(`char` \*<long\_name>);
 
 ## DESCRIPTION
 
@@ -42,6 +46,12 @@ leaks in your program.  Additionally, this will reset the internal state,
 which resets all options, allowing you to define new options with `hc_opt`(),
 and call `hc_run`() with different arguments.
 
+The functions `hc_is_present`, `hc_has_value`, `hc_get_value`, and
+`hc_get_level` are all used to grab the values of the options after `hc_run`()
+has been called.  This allows for retrieval of user-passed values without
+having to access the `hc_results` object returned by `hc_run`() or
+`hc_get_results`().
+
 ## RETURN VALUE
 
 There are 2 different types that are returned by `hc_run`() and
@@ -71,7 +81,7 @@ latter is included only as an array of of the former.  These objects are
 Please note that the `count` field of the `hc_results` object is the size of
 the `options` array, and the the `has_argument` field of the `hc_option`
 argument indicates whether the option has a required (1), optional (2), or no
-argument (0).
+(0) argument.
 
 ## NOTES
 
@@ -138,7 +148,7 @@ An extremely basic example of the features of `highcommand`.
 
 ## BUGS
 
-Undoubtedly. Report them or discuss them at:
+Undoubtedly. Report or discuss them at:
 
     https://github.com/dlom/highcommand/issues
 
