@@ -3,13 +3,13 @@ LIBDIR     = $(PREFIX)/lib
 INCLUDEDIR = $(PREFIX)/include
 MANDIR     = $(PREFIX)/share/man/man3
 
-CC         = gcc
+CC        ?= gcc
 CFLAGS    += -Wall -Wextra -std=gnu99 -pedantic
 
 INSTALL   ?= install
 
 FUNCTIONS = hc_opt hc_run hc_get_results hc_cleanup hc_is_present hc_has_value hc_get_value hc_get_level
-MANPAGES = $(addprefix man/,$(addsuffix .3,$(FUNCTIONS)))
+MANPAGES  = $(addprefix man/,$(addsuffix .3,$(FUNCTIONS)))
 
 TESTS = $(basename $(wildcard tests/*_test.c))
 TEST_OUTPUT = TAP
