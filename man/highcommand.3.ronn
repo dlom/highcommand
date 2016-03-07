@@ -80,8 +80,8 @@ latter is included only as an array of of the former.  These objects are
 
 Please note that the `count` field of the `hc_results` object is the size of
 the `options` array, and the the `has_argument` field of the `hc_option`
-argument indicates whether the option has a required (1), optional (2), or no
-(0) argument.
+argument indicates whether the option has an associated required (1), 
+optional (2), or no (0) argument.
 
 ## NOTES
 

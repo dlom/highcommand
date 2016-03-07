@@ -55,8 +55,9 @@ static void test_hc_opt_by_ref(void **state) {
     hc_opt_by_ref(test_meta, "e=", "epic=", "that was epic dude");
     hc_opt_by_ref(test_meta, "f=", "fail=", "failure to succeed");
     hc_opt_by_ref(test_meta, "h", "help", "show this message");
+    hc_opt_by_ref(test_meta, "v", "verbose", "verbosity level");
     assert_int_equal(test_meta->capacity,   16);
-    assert_int_equal(test_meta->next_index, 8);
+    assert_int_equal(test_meta->next_index, 9);
     assert_string_equal(test_meta->options[2].short_name, "b");
     assert_string_equal(test_meta->options[2].long_name, "boom");
     assert_int_equal(test_meta->options[2].has_argument, 2);
@@ -67,7 +68,7 @@ static void test_hc_opt_by_ref(void **state) {
 
 static void test_hc_run_by_ref(void **state) {
     hc_meta *test_meta = *state;
-    char *argv[] = {"name", "-a=wow", "arg0", "--help", "-d", "--boom", "--epic", "wow2", "arg1", "arg2"};
+    char *argv[] = {"name", "-awow", "arg0", "--help", "-d", "--boom", "--epic=wow2", "arg1", "arg2", "-vvvv"};
     int argc = sizeof(argv)/sizeof(argv[0]);
     hc_run_by_ref(test_meta, argc, argv);
 
@@ -79,11 +80,37 @@ static void test_hc_run_by_ref(void **state) {
     assert_true(test_meta->ran);
 }
 
+static void test_results(void **state) {
+    hc_meta *test_meta = *state;
+
+    assert_false(test_meta->options[0].is_present);
+    assert_true(test_meta->options[1].is_present);
+    assert_true(test_meta->options[2].is_present);
+    assert_false(test_meta->options[3].is_present);
+    assert_true(test_meta->options[4].is_present);
+    assert_true(test_meta->options[5].is_present);
+    assert_false(test_meta->options[6].is_present);
+    assert_true(test_meta->options[7].is_present);
+    assert_true(test_meta->options[8].is_present);
+
+    assert_true(test_meta->options[1].has_value);
+    assert_false(test_meta->options[2].has_value);
+    assert_false(test_meta->options[4].has_value);
+    assert_true(test_meta->options[5].has_value);
+    assert_false(test_meta->options[7].has_value);
+    assert_false(test_meta->options[8].has_value);
+
+    assert_string_equal(test_meta->options[1].value, "wow");
+    assert_string_equal(test_meta->options[5].value, "wow2");
+    assert_int_equal(test_meta->options[8].level, 4);
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_hc_new_meta),
         cmocka_unit_test(test_hc_opt_by_ref),
-        cmocka_unit_test(test_hc_run_by_ref)
+        cmocka_unit_test(test_hc_run_by_ref),
+        cmocka_unit_test(test_results)
     };
     return cmocka_run_group_tests(tests, setup, teardown);
 }
