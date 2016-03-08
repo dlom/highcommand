@@ -58,8 +58,8 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
     while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != EOF) {
         hc_opt = hc_get_option_by_ref(meta, (opt != ':' ? opt : optopt));
         if (hc_opt != NULL) {
-            if (hc_opt->has_argument == optional_argument && optarg == NULL && HC_ARG_ISNT_OPTION(argv[optind])) {
-                if (strcmp(argv[optind], "--") != 0) {
+            if (hc_opt->has_argument == optional_argument && optarg == NULL) {
+                if (optind < argc && HC_ARG_ISNT_OPTION(argv[optind]) && strcmp(argv[optind], "--") != 0) {
                     optarg = argv[optind];
                     optind++;
                 }

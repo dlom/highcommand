@@ -50,7 +50,7 @@ static void test_hc_opt_by_ref(void **state) {
 
     hc_opt_by_ref(test_meta, "a=", "amazing=", "it's amazing");
     hc_opt_by_ref(test_meta, "b=?", "boom=?", "boom you're dead");
-    hc_opt_by_ref(test_meta, "c=", "crazy=", "that's crazy");
+    hc_opt_by_ref(test_meta, "c=?", "crazy=?", "that's crazy");
     hc_opt_by_ref(test_meta, "d", "different", "wow different");
     hc_opt_by_ref(test_meta, "e=", "epic=", "that was epic dude");
     hc_opt_by_ref(test_meta, "f=", "fail=", "failure to succeed");
@@ -68,7 +68,7 @@ static void test_hc_opt_by_ref(void **state) {
 
 static void test_hc_run_by_ref(void **state) {
     hc_meta *test_meta = *state;
-    char *argv[] = {"name", "-awow", "arg0", "--help", "-d", "--boom", "--epic=wow2", "arg1", "arg2", "-vvvv"};
+    char *argv[] = {"name", "-awow", "arg0", "--help", "-d", "--boom", "--epic=wow2", "arg1", "arg2", "-vvvv", "--crazy"};
     int argc = sizeof(argv)/sizeof(argv[0]);
     hc_run_by_ref(test_meta, argc, argv);
 
@@ -86,7 +86,7 @@ static void test_results(void **state) {
     assert_false(test_meta->options[0].is_present);
     assert_true(test_meta->options[1].is_present);
     assert_true(test_meta->options[2].is_present);
-    assert_false(test_meta->options[3].is_present);
+    assert_true(test_meta->options[3].is_present);
     assert_true(test_meta->options[4].is_present);
     assert_true(test_meta->options[5].is_present);
     assert_false(test_meta->options[6].is_present);
@@ -95,6 +95,7 @@ static void test_results(void **state) {
 
     assert_true(test_meta->options[1].has_value);
     assert_false(test_meta->options[2].has_value);
+    assert_false(test_meta->options[3].has_value);
     assert_false(test_meta->options[4].has_value);
     assert_true(test_meta->options[5].has_value);
     assert_false(test_meta->options[7].has_value);
