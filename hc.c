@@ -63,10 +63,12 @@ int hc_run_by_ref(hc_meta *meta, int argc, char *argv[]) {
                     optarg = argv[optind];
                     optind++;
                 }
-            } else if (hc_opt->has_argument == required_argument && optarg != NULL && strcmp(optarg, "--") == 0) {
-                opt = ':';
-                optarg = NULL;
-                optind--;
+            } else if (hc_opt->has_argument == required_argument && optarg != NULL) {
+                if (strcmp(optarg, "--") == 0 && strcmp(argv[optind - 1], "--") == 0) {
+                    opt = ':';
+                    optarg = NULL;
+                    optind--;
+                }
             }
         }
 

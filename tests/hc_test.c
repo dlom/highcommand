@@ -68,11 +68,11 @@ static void test_hc_opt_by_ref(void **state) {
 
 static void test_hc_run_by_ref(void **state) {
     hc_meta *test_meta = *state;
-    char *argv[] = {"name", "-awow", "arg0", "--help", "-d", "--boom", "--epic=wow2", "arg1", "arg2", "-vvvv", "--crazy"};
+    char *argv[] = {"name", "-a", "wow", "arg0", "--help", "-d", "--boom", "--epic", "wow2", "arg1", "arg2", "-vvvv", "--crazy"};
     int argc = sizeof(argv)/sizeof(argv[0]);
     hc_run_by_ref(test_meta, argc, argv);
 
-    assert_string_equal(test_meta->argv0, argv[0]);
+    assert_string_equal(test_meta->argv0, "name");
     assert_int_equal(test_meta->new_argc, 3);
     assert_string_equal(test_meta->new_argv[0], "arg0");
     assert_string_equal(test_meta->new_argv[1], "arg1");
@@ -106,12 +106,36 @@ static void test_results(void **state) {
     assert_int_equal(test_meta->options[8].level, 4);
 }
 
+static void test_edgecases(void **state) {
+    hc_meta *test_meta = *state;
+    hc_free_meta_by_ref(test_meta);
+    *test_meta = hc_new_meta();
+
+    hc_opt_by_ref(test_meta, "n=", "name=", "your name");
+    hc_opt_by_ref(test_meta, "a=", "another=", "another one");
+    hc_opt_by_ref(test_meta, "o=?", "optional=?", "optional argument");
+    hc_opt_by_ref(test_meta, "m=?", "more=?", "more optional arguments");
+
+    char *argv[] = {"name", "--name=--", "-a--", "--optional=--", "-m", "--", "arg0"};
+    int argc = sizeof(argv)/sizeof(argv[0]);
+    hc_run_by_ref(test_meta, argc, argv);
+
+    assert_string_equal(test_meta->options[0].value, "--");
+    assert_string_equal(test_meta->options[1].value, "--");
+    assert_string_equal(test_meta->options[2].value, "--");
+    assert_true(test_meta->options[3].is_present);
+    assert_false(test_meta->options[3].has_value);
+    assert_int_equal(test_meta->new_argc, 1);
+    assert_string_equal(test_meta->new_argv[0], "arg0");
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_hc_new_meta),
         cmocka_unit_test(test_hc_opt_by_ref),
         cmocka_unit_test(test_hc_run_by_ref),
-        cmocka_unit_test(test_results)
+        cmocka_unit_test(test_results),
+        cmocka_unit_test(test_edgecases)
     };
     return cmocka_run_group_tests(tests, setup, teardown);
 }
