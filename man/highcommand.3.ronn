@@ -86,19 +86,27 @@ optional (2), or no (0) argument.
 ## NOTES
 
 `hc_run`() __will__ permute the original <argv> argument so that all non-option
-values are at the end. See `getopt`(3) for more information.
+values are at the end.  See `getopt`(3) for more information.
 
 Additionally, strings in the `struct hc_results` object (which include the <argv>
 array as well as the values of each `struct hc_option`) will not be modified or freed
 until `hc_cleanup`() is called, and as such, are available to use without
-needing to be copied and freed, such as by `strdup`(3).
+needing to be copied (such as by `strdup`(3)) and then subsequently freed.
 
-The astute reader will also notice that there are some other public functions
-declared in `<hc.h>`.  These functions enable a finer-grained control over the
+While git-style commands are supported, nesting commands is not supported by
+the interface described in this manpage.  Any attempt to nest commands below
+the first level will fail and probably crash your program horribly.
+
+If you desire more fine-grained control over your options/commands, including
+nesting commands infinitely deeply, there are some other public functions
+declared in `<hc.h>`.  These functions enable a much more control over the
 option declaring and parsing process, and though they are available, they are
 recommended only for users who understand how they work and why they are
-useful.  The functions outlined in the manual should be sufficient for almost
-all use cases.
+useful.  Additionally, these functions are not officially supported AT ALL by
+me (the developer) The functions outlined in the manual should be sufficient
+for almost all use cases.  Users who desire assistance using these functions
+should request it at the email listed below (which I will reply to at my own
+discretion).
 
 ## EXAMPLE
 
@@ -148,7 +156,7 @@ An extremely basic example of the features of `highcommand`.
 
 ## BUGS
 
-Undoubtedly. Report or discuss them at:
+Undoubtedly.  Report or discuss them at:
 
     https://github.com/dlom/highcommand/issues
 

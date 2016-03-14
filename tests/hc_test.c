@@ -56,7 +56,7 @@ static void test_hc_opt_by_ref(void **state) {
     hc_opt_by_ref(test_meta, "f=", "fail=", "failure to succeed");
     hc_opt_by_ref(test_meta, "h", "help", "show this message");
     hc_opt_by_ref(test_meta, "v", "verbose", "verbosity level");
-    assert_int_equal(test_meta->capacity,   16);
+    assert_int_equal(test_meta->capacity, 16);
     assert_int_equal(test_meta->next_index, 9);
     assert_string_equal(test_meta->options[2].short_name, "b");
     assert_string_equal(test_meta->options[2].long_name, "boom");
@@ -129,13 +129,37 @@ static void test_edgecases(void **state) {
     assert_string_equal(test_meta->new_argv[0], "arg0");
 }
 
+static void test_commands(void **state) {
+    struct hc_meta *test_meta = *state;
+    hc_free_meta_by_ref(test_meta);
+    *test_meta = hc_new_meta();
+
+    hc_opt_by_ref(test_meta, "h", "help", "show this message");
+    hc_opt_by_ref(test_meta, "v", "verbose", "verbosity level");
+
+    assert_null(test_meta->commands_head);
+
+    struct hc_meta *command_meta1 = hc_cmd_by_ref(test_meta, "cmd1");
+    struct hc_meta *command_meta2 = hc_cmd_by_ref(test_meta, "cmd2");
+    struct hc_meta *command_meta3 = hc_cmd_by_ref(test_meta, "cmd3");
+
+    hc_opt_by_ref(command_meta1, "h", "help", "help for cmd1");
+    hc_opt_by_ref(command_meta2, "h", "help", "help for cmd2");
+    hc_opt_by_ref(command_meta3, "h", "help", "help for cmd3");
+
+    assert_ptr_equal(command_meta3, &(test_meta->commands_head->meta));
+    assert_ptr_equal(command_meta2, &(test_meta->commands_head->next->meta));
+    assert_null(test_meta->commands_head->next->next->next);
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_hc_new_meta),
         cmocka_unit_test(test_hc_opt_by_ref),
         cmocka_unit_test(test_hc_run_by_ref),
         cmocka_unit_test(test_results),
-        cmocka_unit_test(test_edgecases)
+        cmocka_unit_test(test_edgecases),
+        cmocka_unit_test(test_commands)
     };
     return cmocka_run_group_tests(tests, setup, teardown);
 }

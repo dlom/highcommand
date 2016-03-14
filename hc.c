@@ -9,6 +9,8 @@
 #include <stdio.h>
 
 static struct hc_meta internal_meta = HC_NEW_META;
+static char *program_name = NULL;
+static char *inside_command = NULL;
 
 // by ref
 
@@ -43,6 +45,16 @@ int hc_opt_by_ref(struct hc_meta *meta, char *short_name, char *long_name, char 
 }
 
 int hc_run_by_ref(struct hc_meta *meta, int argc, char *argv[]) {
+    if (argc > 1) {
+        struct hc_command *command = hc_get_command_by_ref(meta, argv[1]);
+        if (command != NULL) {
+            meta->ran = 1;
+            meta->argv0 = argv[0];
+            meta->ran_command = argv[1];
+            return hc_run_by_ref(&(command->meta), argc - 1, argv + 1);
+        }
+    }
+
     char *short_options = hc_get_short_options_by_ref(meta);
     struct option *long_options = hc_get_long_options_by_ref(meta);
     if (long_options == NULL || short_options == NULL) {
@@ -84,6 +96,11 @@ int hc_run_by_ref(struct hc_meta *meta, int argc, char *argv[]) {
                 if (hc_opt->has_argument > 0 && optarg != NULL) {
                     free(hc_opt->value);
                     hc_opt->value = strdup(optarg);
+                    if (hc_opt->value == NULL) {
+                        free(long_options);
+                        free(short_options);
+                        return errno;
+                    }
                     hc_opt->has_value = 1;
                 }
             }
@@ -109,6 +126,25 @@ int hc_run_by_ref(struct hc_meta *meta, int argc, char *argv[]) {
     return 0;
 }
 
+struct hc_meta *hc_cmd_by_ref(struct hc_meta *meta, char *name) {
+    struct hc_command *command = malloc(sizeof(struct hc_command));
+    if (command == NULL) {
+        return NULL;
+    }
+    command->name = strdup(name);
+    if (command->name == NULL) {
+        free(command);
+        return NULL;
+    }
+
+    command->meta = hc_new_meta();
+
+    command->next = meta->commands_head;
+    meta->commands_head = command;
+
+    return &(command->meta);
+}
+
 void hc_free_meta_by_ref(struct hc_meta *meta) {
     if (meta == NULL) return;
     meta->ran = 0;
@@ -126,6 +162,14 @@ void hc_free_meta_by_ref(struct hc_meta *meta) {
     meta->new_argc = 0;
     meta->new_argv = NULL;
     meta->argv0 = NULL;
+    struct hc_command *head = meta->commands_head;
+    while (head != NULL) {
+        free(head->name);
+        hc_free_meta_by_ref(&(head->meta));
+        struct hc_command *old = head;
+        head = head->next;
+        free(old);
+    }
     return;
 }
 
@@ -133,14 +177,37 @@ void hc_free_meta_by_ref(struct hc_meta *meta) {
 
 void hc_opt(char *short_name, char *long_name, char *help_text) {
     if (!internal_meta.ran) {
-        int result = hc_opt_by_ref(&internal_meta, short_name, long_name, help_text);
+        int result;
+        if (inside_command) {
+            struct hc_command *cmd = hc_get_command_by_ref(&internal_meta, inside_command);
+            result = hc_opt_by_ref(&(cmd->meta), short_name, long_name, help_text);
+        } else {
+            result = hc_opt_by_ref(&internal_meta, short_name, long_name, help_text);
+        }
         if (result != 0) {
             // TODO print informative error
         }
     }
 }
 
+void hc_cmd(char *name, hc_cmd_callback callback) {
+    if (inside_command != NULL) {
+        // TODO print informative error
+        printf("Ignoring nested command '%s' (already inside command %s)\n", name, inside_command);
+        return;
+    }
+    inside_command = strdup(name);
+    if (hc_cmd_by_ref(&internal_meta, name) == NULL) {
+        // TODO print informative error
+        return;
+    }
+    callback();
+    free(inside_command);
+    inside_command = NULL;
+}
+
 struct hc_results hc_run(int argc, char *argv[]) {
+    program_name = argv[0];
     if (!internal_meta.ran) {
         int result = hc_run_by_ref(&internal_meta, argc, argv);
         if (result != 0) {
@@ -155,12 +222,24 @@ struct hc_results hc_run(int argc, char *argv[]) {
 
 struct hc_results hc_get_results() {
     if (internal_meta.ran) {
+        if (internal_meta.ran_command) {
+            struct hc_meta cmd_meta = hc_get_command_by_ref(&internal_meta, internal_meta.ran_command)->meta;
+            return (struct hc_results) {
+                .program_name = program_name,
+                .name         = cmd_meta.argv0,
+                .options      = cmd_meta.options,
+                .count        = cmd_meta.next_index,
+                .argc         = cmd_meta.new_argc,
+                .argv         = cmd_meta.new_argv
+            };
+        }
         return (struct hc_results) {
-            .name    = internal_meta.argv0,
-            .options = internal_meta.options,
-            .count   = internal_meta.next_index,
-            .argc    = internal_meta.new_argc,
-            .argv    = internal_meta.new_argv
+            .program_name = program_name,
+            .name         = internal_meta.argv0,
+            .options      = internal_meta.options,
+            .count        = internal_meta.next_index,
+            .argc         = internal_meta.new_argc,
+            .argv         = internal_meta.new_argv
         };
     } else {
         // TODO print informative warning
@@ -174,7 +253,13 @@ void hc_cleanup() {
 }
 
 int hc_is_present(char *long_name) {
-    struct hc_option *hc_opt = hc_get_option_by_ref_long(&internal_meta, long_name);
+    struct hc_option *hc_opt;
+    if (internal_meta.ran_command) {
+        struct hc_meta cmd_meta = hc_get_command_by_ref(&internal_meta, internal_meta.ran_command)->meta;
+        hc_opt = hc_get_option_by_ref_long(&cmd_meta, long_name);
+    } else {
+        hc_opt = hc_get_option_by_ref_long(&internal_meta, long_name);
+    }
     if (hc_opt != NULL) {
         return hc_opt->is_present;
     }
@@ -182,24 +267,39 @@ int hc_is_present(char *long_name) {
 }
 
 int hc_has_value(char *long_name) {
-    struct hc_option *hc_opt = hc_get_option_by_ref_long(&internal_meta, long_name);
-    if (hc_opt != NULL) {
+    struct hc_option *hc_opt;
+    if (internal_meta.ran_command) {
+        struct hc_meta cmd_meta = hc_get_command_by_ref(&internal_meta, internal_meta.ran_command)->meta;
+        hc_opt = hc_get_option_by_ref_long(&cmd_meta, long_name);
+    } else {
+        hc_opt = hc_get_option_by_ref_long(&internal_meta, long_name);
+    }    if (hc_opt != NULL) {
         return hc_opt->has_value;
     }
     return 0;
 }
 
 char *hc_get_value(char *long_name) {
-    struct hc_option *hc_opt = hc_get_option_by_ref_long(&internal_meta, long_name);
-    if (hc_opt != NULL) {
+    struct hc_option *hc_opt;
+    if (internal_meta.ran_command) {
+        struct hc_meta cmd_meta = hc_get_command_by_ref(&internal_meta, internal_meta.ran_command)->meta;
+        hc_opt = hc_get_option_by_ref_long(&cmd_meta, long_name);
+    } else {
+        hc_opt = hc_get_option_by_ref_long(&internal_meta, long_name);
+    }    if (hc_opt != NULL) {
         return hc_opt->value;
     }
     return NULL;
 }
 
 int hc_get_level(char *long_name) {
-    struct hc_option *hc_opt = hc_get_option_by_ref_long(&internal_meta, long_name);
-    if (hc_opt != NULL) {
+    struct hc_option *hc_opt;
+    if (internal_meta.ran_command) {
+        struct hc_meta cmd_meta = hc_get_command_by_ref(&internal_meta, internal_meta.ran_command)->meta;
+        hc_opt = hc_get_option_by_ref_long(&cmd_meta, long_name);
+    } else {
+        hc_opt = hc_get_option_by_ref_long(&internal_meta, long_name);
+    }    if (hc_opt != NULL) {
         return hc_opt->level;
     }
     return 0;
@@ -285,6 +385,14 @@ struct hc_option *hc_get_option_by_ref_long(struct hc_meta *meta, char *long_nam
         }
     }
     return NULL;
+}
+
+struct hc_command *hc_get_command_by_ref(struct hc_meta *meta, char *name) {
+    struct hc_command *head = meta->commands_head;
+    while (head != NULL && strcmp(head->name, name) != 0) {
+        head = head->next;
+    }
+    return head;
 }
 
 // private utils

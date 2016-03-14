@@ -3,7 +3,7 @@
 
 // private stuffs
 
-#define HC_NEW_META { 0, NULL, 0, 0, 0, NULL, NULL }
+#define HC_NEW_META { 0, NULL, NULL, 0, 0, 0, NULL, NULL, NULL }
 
 #define HC_MAX_OPTS_CAPACITY (64)
 #define HC_INITIAL_OPTS_CAPACITY (8)
@@ -17,6 +17,7 @@ char *hc_get_short_options_by_ref(struct hc_meta *meta);
 struct option *hc_get_long_options_by_ref(struct hc_meta *meta);
 struct hc_option *hc_get_option_by_ref(struct hc_meta *meta, char short_name);
 struct hc_option *hc_get_option_by_ref_long(struct hc_meta *meta, char *long_name);
+struct hc_command *hc_get_command_by_ref(struct hc_meta *meta, char *name);
 
 // private utils
 
