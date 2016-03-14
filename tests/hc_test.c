@@ -10,7 +10,7 @@
 #include "../hc_private.h"
 
 static int setup(void **state) {
-    hc_meta *test_meta = malloc(sizeof(hc_meta));
+    struct hc_meta *test_meta = malloc(sizeof(struct hc_meta));
     if (test_meta == NULL) {
         return -1;
     }
@@ -20,21 +20,21 @@ static int setup(void **state) {
 }
 
 static int teardown(void **state) {
-    hc_meta *test_meta = *state;
+    struct hc_meta *test_meta = *state;
     hc_free_meta_by_ref(test_meta);
     free(test_meta);
     return 0;
 }
 
 static void test_hc_new_meta(void **state) {
-    hc_meta *test_meta = *state;
-    hc_meta  test_empty_meta = HC_NEW_META;
+    struct hc_meta *test_meta = *state;
+    struct hc_meta  test_empty_meta = HC_NEW_META;
 
-    assert_memory_equal(test_meta, &test_empty_meta, sizeof(hc_meta));
+    assert_memory_equal(test_meta, &test_empty_meta, sizeof(struct hc_meta));
 }
 
 static void test_hc_opt_by_ref(void **state) {
-    hc_meta *test_meta = *state;
+    struct hc_meta *test_meta = *state;
 
     assert_int_equal(test_meta->next_index, 0);
     assert_null(test_meta->options);
@@ -67,7 +67,7 @@ static void test_hc_opt_by_ref(void **state) {
 }
 
 static void test_hc_run_by_ref(void **state) {
-    hc_meta *test_meta = *state;
+    struct hc_meta *test_meta = *state;
     char *argv[] = {"name", "-a", "wow", "arg0", "--help", "-d", "--boom", "--epic", "wow2", "arg1", "arg2", "-vvvv", "--crazy"};
     int argc = sizeof(argv)/sizeof(argv[0]);
     hc_run_by_ref(test_meta, argc, argv);
@@ -81,7 +81,7 @@ static void test_hc_run_by_ref(void **state) {
 }
 
 static void test_results(void **state) {
-    hc_meta *test_meta = *state;
+    struct hc_meta *test_meta = *state;
 
     assert_false(test_meta->options[0].is_present);
     assert_true(test_meta->options[1].is_present);
@@ -107,7 +107,7 @@ static void test_results(void **state) {
 }
 
 static void test_edgecases(void **state) {
-    hc_meta *test_meta = *state;
+    struct hc_meta *test_meta = *state;
     hc_free_meta_by_ref(test_meta);
     *test_meta = hc_new_meta();
 

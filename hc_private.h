@@ -12,11 +12,11 @@
 #define HC_META_NEARING_CAPACITY(meta) ((meta->next_index + 1) > (float) meta->capacity * (HC_RESIZE_AT / 100.0))
 #define HC_ARG_ISNT_OPTION(arg) (arg != NULL && (strcmp(arg, "-") == 0 || strcmp(arg, "--") == 0 || arg[0] != '-'))
 
-int hc_resize_opts_array_by_ref(hc_meta *meta);
-char *hc_get_short_options_by_ref(hc_meta *meta);
-struct option *hc_get_long_options_by_ref(hc_meta *meta);
-hc_option *hc_get_option_by_ref(hc_meta *meta, char short_name);
-hc_option *hc_get_option_by_ref_long(hc_meta *meta, char *long_name);
+int hc_resize_opts_array_by_ref(struct hc_meta *meta);
+char *hc_get_short_options_by_ref(struct hc_meta *meta);
+struct option *hc_get_long_options_by_ref(struct hc_meta *meta);
+struct hc_option *hc_get_option_by_ref(struct hc_meta *meta, char short_name);
+struct hc_option *hc_get_option_by_ref_long(struct hc_meta *meta, char *long_name);
 
 // private utils
 

@@ -5,9 +5,9 @@ highcommand(3) -- getopt() for the future
 
 `#include <hc.h>`
 
- - `void` `hc_opt`(`char` \*<short\_name>, `char` \*<long\_name>, `char` \*<help\_text>);
- - `hc_results` `hc_run`(`int` <argc>, `char` \*<argv>[]);
- - `hc_results` `hc_get_results`();
+ - `void` `struct hc_opt`(`char` \*<short\_name>, `char` \*<long\_name>, `char` \*<help\_text>);
+ - `struct hc_results` `hc_run`(`int` <argc>, `char` \*<argv>[]);
+ - `struct hc_results` `hc_get_results`();
  - `void` `hc_cleanup`();
  - `int` `hc_is_present`(`char` \*<long\_name>);
  - `int` `hc_has_value`(`char` \*<long\_name>);
@@ -16,17 +16,17 @@ highcommand(3) -- getopt() for the future
 
 ## DESCRIPTION
 
-The `hc_opt`() function defines an option that will be used by `hc_run()` to
+The `struct hc_opt`() function defines an option that will be used by `hc_run()` to
 determine how to parse the options internally.  <short\_name> and <long\_name>
 are the values searched for by `hc_run`(), while <help\_text> is used
 internally to generate output for `-h`|`--help`.  Additionally, <long\_name>
-is also used when retrieving values from the `hc_results` object.  All three
+is also used when retrieving values from the `struct hc_results` object.  All three
 arguments are required to be present and non-`NULL`.  If an option would
 require an argument, append '=' to both <short\_name> and <long\_name>.  If an
 option would optionally require an argument instead, append '=?' instead.
 
 The `hc_run`() function parses a given vector of arguments, based on the
-options defined using `hc_opt`().  It's arguments, <argc> and <argv> can be
+options defined using `struct hc_opt`().  It's arguments, <argc> and <argv> can be
 any count/vector combination, but the arguments from `main`() work just fine.
 Internally, `getopt_long`(3) is used to parse the arguments, with a couple of
 caveats.  Notably, the literal '--' __always__ signifies the end of option
@@ -36,38 +36,38 @@ optional arguments will always try to find a valid argument.  `hc_run`() is
 fairly smart about handling unknown options or missing required arguments, and
 will print out a semi-descriptive message.
 
-The `hc_get_results`() function returns the same `hc_results` object that
+The `hc_get_results`() function returns the same `struct hc_results` object that
 `hc_run`() returns, but only if `hc_run`() has ran.  If not, an empty
-`hc_results` object is returned instead.
+`struct hc_results` object is returned instead.
 
-The `hc_cleanup`() function cleans up all the data produced by `hc_opt`()
+The `hc_cleanup`() function cleans up all the data produced by `struct hc_opt`()
 calls and `hc_run`().  Make sure to call this if you don't want memory
 leaks in your program.  Additionally, this will reset the internal state,
-which resets all options, allowing you to define new options with `hc_opt`(),
+which resets all options, allowing you to define new options with `struct hc_opt`(),
 and call `hc_run`() with different arguments.
 
 The functions `hc_is_present`, `hc_has_value`, `hc_get_value`, and
 `hc_get_level` are all used to grab the values of the options after `hc_run`()
 has been called.  This allows for retrieval of user-passed values without
-having to access the `hc_results` object returned by `hc_run`() or
+having to access the `struct hc_results` object returned by `hc_run`() or
 `hc_get_results`().
 
 ## RETURN VALUE
 
 There are 2 different types that are returned by `hc_run`() and
-`hc_get_results`(): The `hc_results` object, and the `hc_option` object.  The
+`hc_get_results`(): The `struct hc_results` object, and the `struct hc_option` object.  The
 latter is included only as an array of of the former.  These objects are
 `typedef`'d structs.
 
-    typedef struct {
+    struct hc_results {
         char *name;
-        hc_option *options;
+        struct hc_option *options;
         int count;
         int argc;
         char **argv;
-    } hc_results;
+    };
 
-    typedef struct {
+    struct hc_option {
         char *short_name;
         char *long_name;
         char *help_text;
@@ -76,11 +76,11 @@ latter is included only as an array of of the former.  These objects are
         int has_value;
         char *value;
         int level;
-    } hc_option;
+    };
 
-Please note that the `count` field of the `hc_results` object is the size of
-the `options` array, and the the `has_argument` field of the `hc_option`
-argument indicates whether the option has an associated required (1), 
+Please note that the `count` field of the `struct hc_results` object is the size of
+the `options` array, and the the `has_argument` field of the `struct hc_option`
+argument indicates whether the option has an associated required (1),
 optional (2), or no (0) argument.
 
 ## NOTES
@@ -88,8 +88,8 @@ optional (2), or no (0) argument.
 `hc_run`() __will__ permute the original <argv> argument so that all non-option
 values are at the end. See `getopt`(3) for more information.
 
-Additionally, strings in the `hc_results` object (which include the <argv>
-array as well as the values of each `hc_option`) will not be modified or freed
+Additionally, strings in the `struct hc_results` object (which include the <argv>
+array as well as the values of each `struct hc_option`) will not be modified or freed
 until `hc_cleanup`() is called, and as such, are available to use without
 needing to be copied and freed, such as by `strdup`(3).
 
@@ -108,12 +108,12 @@ An extremely basic example of the features of `highcommand`.
     #include <stdio.h>
 
     int main(int argc, char *argv[]) {
-        hc_opt("h",   "help",    "show this message");
-        hc_opt("v",   "verbose", "verbosity (use multiple times)");
-        hc_opt("n=",  "name=",   "your name");
-        hc_opt("o=?", "opt=?",   "optional arguments");
+        struct hc_opt("h",   "help",    "show this message");
+        struct hc_opt("v",   "verbose", "verbosity (use multiple times)");
+        struct hc_opt("n=",  "name=",   "your name");
+        struct hc_opt("o=?", "opt=?",   "optional arguments");
 
-        hc_results results = hc_run(argc, argv);
+        struct hc_results results = hc_run(argc, argv);
 
         if (hc_is_present("help")) {
             // display help
