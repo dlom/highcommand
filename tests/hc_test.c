@@ -52,7 +52,7 @@ static void test_hc_opt_by_ref(void **state) {
     hc_opt_by_ref(test_meta, "b=?", "boom=?", "boom you're dead");
     hc_opt_by_ref(test_meta, "c=?", "crazy=?", "that's crazy");
     hc_opt_by_ref(test_meta, "d", "different", "wow different");
-    hc_opt_by_ref(test_meta, "e=", "epic=", "that was epic dude");
+    hc_opt_by_ref(test_meta, "-e=", "--epic=", "that was epic dude");
     hc_opt_by_ref(test_meta, "f=", "fail=", "failure to succeed");
     hc_opt_by_ref(test_meta, "h", "help", "show this message");
     hc_opt_by_ref(test_meta, "v", "verbose", "verbosity level");

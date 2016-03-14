@@ -31,8 +31,11 @@ int hc_opt_by_ref(struct hc_meta *meta, char *short_name, char *long_name, char 
         return -1;
     }
 
-    char *s = strndup(short_name, short_length - has_arg);
-    char *l = strndup(long_name, long_length - has_arg);
+    int short_has_leading_dash = (short_length > 0 && short_name[0] == '-') ? 1 : 0;
+    int long_has_leadng_dash = (long_length > 1 && long_name[0] == '-' && long_name[1] == '-') ? 2 : 0;
+
+    char *s = strndup(short_name + short_has_leading_dash, short_length - has_arg - short_has_leading_dash);
+    char *l = strndup(long_name + long_has_leadng_dash, long_length - has_arg - long_has_leadng_dash);
     char *h = strdup(help_text);
     if (s == NULL || l == NULL || h == NULL) {
         free(s); free(l); free(h);
