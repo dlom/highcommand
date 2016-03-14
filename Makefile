@@ -3,13 +3,16 @@ LIBDIR     = $(PREFIX)/lib
 INCLUDEDIR = $(PREFIX)/include
 MANDIR     = $(PREFIX)/share/man/man3
 
+MAN_TITLE  = "High Command"
+MAN_NAME   = "Mark Old"
+
 CC        ?= gcc
 CFLAGS    += -Wall -Wextra -std=gnu99 -pedantic
 
 INSTALL   ?= install
 
-FUNCTIONS = hc_opt hc_run hc_get_results hc_cleanup hc_is_present hc_has_value hc_get_value hc_get_level
-MANPAGES  = $(addprefix man/,$(addsuffix .3,$(FUNCTIONS)))
+FUNCTIONS  = hc_opt hc_run hc_get_results hc_cleanup hc_is_present hc_has_value hc_get_value hc_get_level
+MANPAGES   = $(addprefix man/,$(addsuffix .3,$(FUNCTIONS)))
 
 TESTS = $(basename $(wildcard tests/*_test.c))
 TEST_OUTPUT = TAP
@@ -33,7 +36,7 @@ install: libhc.a hc.h hc.h man/highcommand.3 $(MANPAGES)
 doc: man/highcommand.3 $(MANPAGES)
 
 man/highcommand.3: man/highcommand.3.ronn
-	ronn --manual="High Command" --organization="Mark Old" --roff man/highcommand.3.ronn
+	ronn --manual=$(MAN_TITLE) --organization=$(MAN_NAME) --roff man/highcommand.3.ronn
 
 man/%.3:
 	echo ".so man3/highcommand.3" > $@
