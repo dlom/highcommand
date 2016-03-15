@@ -1,6 +1,8 @@
 #ifndef HIGH_COMMAND_H__
 #define HIGH_COMMAND_H__
 
+extern int hc_cleanup_at_exit;
+
 struct hc_meta;
 struct hc_command;
 

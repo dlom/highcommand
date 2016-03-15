@@ -23,4 +23,8 @@ struct hc_command *hc_get_command_by_ref(struct hc_meta *meta, char *name);
 
 int hc_extract_argument(char *name);
 
+void hc_atexit() {
+	hc_cleanup();
+}
+
 #endif

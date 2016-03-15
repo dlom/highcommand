@@ -8,9 +8,17 @@
 #include <getopt.h>
 #include <stdio.h>
 
+// global members (public)
+
+int hc_cleanup_at_exit = -1;
+
+// global members (private)
+
 static struct hc_meta internal_meta = HC_NEW_META;
 static char *program_name = NULL;
 static char *inside_command = NULL;
+
+static int ran_once = 0;
 
 // by ref
 
@@ -210,6 +218,17 @@ void hc_cmd(char *name, hc_cmd_callback callback) {
 }
 
 struct hc_results hc_run(int argc, char *argv[]) {
+    if (ran_once == 0) {
+        if (hc_cleanup_at_exit == -1) {
+            hc_cleanup_at_exit = 1;
+        }
+        if (hc_cleanup_at_exit) {
+            if (atexit(hc_atexit)) {
+                // TODO print informative error
+            }
+        }
+        ran_once = 1;
+    }
     program_name = argv[0];
     if (!internal_meta.ran) {
         int result = hc_run_by_ref(&internal_meta, argc, argv);
