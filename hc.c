@@ -429,3 +429,7 @@ int hc_extract_argument(char *name) {
         return no_argument; // 0
     }
 }
+
+void hc_atexit() {
+    hc_cleanup();
+}
